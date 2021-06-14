@@ -21,13 +21,10 @@ var (
 	ctx   context.Context
 	rdb   *redis.Client
 
-	serv      = flag.String("server", "localhost:6667", "hostname and port for irc server to connect to")
 	redisAddr = flag.String("redis", "localhost:6379", "Address and port of redis host")
-	nick      = flag.String("nick", "bytebot", "nickname for the bot")
-	id        = flag.String("id", "irc", "ID to use when publishing messages")
-	inbound   = flag.String("inbound", "irc-inbound", "Pubsub queue to publish inbound messages to")
+	id        = flag.String("id", "discord", "ID to use when publishing messages")
+	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
 	outbound  = flag.String("outbound", *id, "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
-	tls       = flag.Bool("tls", false, "Use TLS when connecting to IRC server")
 )
 
 func init() {
