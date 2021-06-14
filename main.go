@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/bbriggs/bytebot-discord/model"
 	"github.com/bwmarrin/discordgo"
+	"github.com/bytebot-chat/gateway-discord/model"
 	"github.com/go-redis/redis/v8"
 	"github.com/satori/go.uuid"
 )
@@ -58,6 +58,7 @@ func main() {
 		return
 	}
 
+	go handleOutbound(*id, rdb, dg)
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -94,11 +95,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
+	fmt.Println("Listening for incoming messages on topic '" + sub + "'")
 	ctx := context.Background()
 	topic := rdb.Subscribe(ctx, sub)
 	channel := topic.Channel()
 	for msg := range channel {
-		m := &model.Message{}
+		m := &model.MessageSend{}
 		err := m.Unmarshal([]byte(msg.Payload))
 		if err != nil {
 			fmt.Println(err)
