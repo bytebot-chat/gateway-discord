@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/bytebot-chat/gateway-discord/model"
@@ -125,6 +126,16 @@ func rdbConnect(addr string) *redis.Client {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+
+	err := rdb.Ping(ctx).Err()
+	if err != nil {
+		time.Sleep(3 * time.Second)
+		err := rdb.Ping(ctx).Err()
+		if err != nil {
+			log.Fatal().Err(err)
+			os.Exit(1)
+		}
+	}
 
 	return rdb
 }
