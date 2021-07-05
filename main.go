@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/bytebot-chat/gateway-discord/model"
@@ -131,7 +132,7 @@ func rdbConnect(addr string) *redis.Client {
 		time.Sleep(3 * time.Second)
 		err := rdb.Ping(ctx).Err()
 		if err != nil {
-			log.Crit("FATAL unable to connect to redis", "error", err)
+			log.Fatal().Err(err)
 			os.Exit(1)
 		}
 	}
