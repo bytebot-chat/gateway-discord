@@ -109,7 +109,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
-	fmt.Println("Listening for outbound messages on topic '" + sub + "'")
+	log.Info().Msg("Listening for outbound messages on topic '" + sub + "'")
 	ctx := context.Background()
 	topic := rdb.Subscribe(ctx, sub)
 	channel := topic.Channel()
