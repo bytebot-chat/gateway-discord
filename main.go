@@ -126,5 +126,15 @@ func rdbConnect(addr string) *redis.Client {
 		DB:       0,  // use default DB
 	})
 
+	err := rdb.Ping(ctx).Err()
+	if err != nil {
+		time.Sleep(3 * time.Second)
+		err := rdb.Ping(ctx).Err()
+		if err != nil {
+			log.Crit("FATAL unable to connect to redis", "error", err)
+			os.Exit(1)
+		}
+	}
+
 	return rdb
 }
