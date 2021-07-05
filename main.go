@@ -12,6 +12,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/bytebot-chat/gateway-discord/model"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/satori/go.uuid"
 )
 
@@ -28,12 +30,16 @@ var (
 )
 
 func init() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
 }
 
 func main() {
+	log.Info().
+		Str("Redis address", *redisAddr).
+		Msg("Discord starting up!")
 
 	rdb = rdbConnect(*redisAddr)
 	ctx = context.Background()
@@ -41,21 +47,25 @@ func main() {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
-		return
+		log.Error().
+			Str("error creating Discord session,", err.Error()).
+			Msg("Exiting")
+
+		os.Exit(1)
 	}
 
 	// Register the messageCreate func as a callback for MessageCreate events.
+	fmt.Println("Publishing inbound messages on topic '" + *inbound + "'")
 	dg.AddHandler(messageCreate)
 
-	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
-
-	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
-		return
+		log.Error().
+			Str("error opening connection,", err.Error()).
+			Msg("Exiting")
+
+		os.Exit(1)
 	}
 
 	go handleOutbound(*id, rdb, dg)
@@ -80,6 +90,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	str, _ := json.Marshal(m)
+	log.Debug().
+		RawJSON("Received message", []byte(str)).
+		Msg("Received message")
+
 	msg := &model.Message{}
 	err := msg.Unmarshal([]byte(str))
 	if err != nil {
@@ -90,12 +104,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg.Metadata.Source = *id
 	stringMsg, _ := json.Marshal(msg)
 	rdb.Publish(ctx, *inbound, stringMsg)
-
+	log.Debug().Msg("Published message to " + *inbound)
 	return
 }
 
 func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
-	fmt.Println("Listening for incoming messages on topic '" + sub + "'")
+	fmt.Println("Listening for outbound messages on topic '" + sub + "'")
 	ctx := context.Background()
 	topic := rdb.Subscribe(ctx, sub)
 	channel := topic.Channel()
