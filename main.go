@@ -121,6 +121,7 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 }
 
 func rdbConnect(addr string) *redis.Client {
+	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "", // no password set
