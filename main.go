@@ -47,10 +47,7 @@ func main() {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	if err != nil {
-		log.Error().
-			Str("error creating Discord session,", err.Error()).
-			Msg("Exiting")
-
+		log.Err(err).Msg("Unable to continue without connection. Exiting!")
 		os.Exit(1)
 	}
 
@@ -61,10 +58,7 @@ func main() {
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
 	err = dg.Open()
 	if err != nil {
-		log.Error().
-			Str("error opening connection,", err.Error()).
-			Msg("Exiting")
-
+		log.Err(err).Msg("Unable to open channel for reading messages")
 		os.Exit(1)
 	}
 
