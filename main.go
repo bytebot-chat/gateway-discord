@@ -35,6 +35,8 @@ func init() {
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
+
+	parseEnv()
 }
 
 func main() {
