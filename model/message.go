@@ -13,7 +13,7 @@ type Message struct {
 }
 
 type MessageSend struct {
-	ChannelID string
+	ChannelID string `json:"channel_id"`
 	Content   string
 	Metadata  Metadata
 }
