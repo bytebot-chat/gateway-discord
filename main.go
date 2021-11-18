@@ -28,6 +28,7 @@ var (
 	id        = flag.String("id", "discord", "ID to use when publishing messages")
 	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
 	outbound  = flag.String("outbound", *id, "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
+	rpass     = flag.String("rpass", *rpass, "Redis Password")
 )
 
 func init() {
@@ -126,7 +127,7 @@ func rdbConnect(addr string) *redis.Client {
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: "", // no password set
+		Password: *rpass, // no password set
 		DB:       0,  // use default DB
 	})
 
