@@ -127,7 +127,7 @@ func rdbConnect(addr string) *redis.Client {
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: *rpass, // no password set
+		Password: rpass, // no password set
 		DB:       0,  // use default DB
 	})
 
