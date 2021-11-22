@@ -5,6 +5,4 @@ build:
     worker: Dockerfile
 
 run:
-  worker:
-    command:
-      - /opt/bytebot
+  worker: /opt/bytebot
