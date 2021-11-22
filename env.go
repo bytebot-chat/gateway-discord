@@ -29,6 +29,10 @@ func parseEnv() {
 	if !isFlagSet("t") {
 		Token = parseStringFromEnv("BYTEBOT_TOKEN", "")
 	}
+
+	if !isFlagSet("rpass") {
+		*redisPass = parseStringFromEnv("BYTEBOT_RPASS", "")
+	}
 }
 
 // Parses a string from an env variable and returns it.

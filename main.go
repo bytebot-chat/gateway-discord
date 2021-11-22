@@ -25,6 +25,7 @@ var (
 	rdb   *redis.Client
 
 	redisAddr = flag.String("redis", "localhost:6379", "Address and port of redis host")
+	redisPass = flag.String("rpass", "", "Redis password")
 	id        = flag.String("id", "discord", "ID to use when publishing messages")
 	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
 	outbound  = flag.String("outbound", *id, "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
@@ -44,7 +45,7 @@ func main() {
 		Str("Redis address", *redisAddr).
 		Msg("Discord starting up!")
 
-	rdb = rdbConnect(*redisAddr)
+	rdb = rdbConnect(*redisAddr, *redisPass, 1)
 	ctx = context.Background()
 
 	// Create a new Discord session using the provided bot token.
@@ -111,23 +112,27 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 	topic := rdb.Subscribe(ctx, sub)
 	channel := topic.Channel()
 	for msg := range channel {
+		log.Debug().Msg("Message received")
 		m := &model.MessageSend{}
 		err := m.Unmarshal([]byte(msg.Payload))
 		if err != nil {
 			fmt.Println(err)
 		}
+		log.Debug().Msg(fmt.Sprintf("Will send this message: %t", m.Metadata.Dest == *id))
+		log.Debug().Msg(fmt.Sprintf("Sending to: %s", m.ChannelID))
+		log.Debug().Msg(fmt.Sprintf("Content: %s", m.Content))
 		if m.Metadata.Dest == *id {
 			s.ChannelMessageSend(m.ChannelID, m.Content)
 		}
 	}
 }
 
-func rdbConnect(addr string) *redis.Client {
+func rdbConnect(addr, pass string, db int) *redis.Client {
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: pass, // no password set
+		DB:       0,    // use default DB
 	})
 
 	err := rdb.Ping(ctx).Err()
