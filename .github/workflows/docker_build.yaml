@@ -47,7 +47,7 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: $REGISTRY/${{ github.repository_owner }}/$IMAGE_NAME
+          images: ghcr.io/${{ github.repository_owner }}/gateway-discord
           tags: |
             type=edge
             type=ref,event=branch
