@@ -15,7 +15,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Variables used for command line parameters
@@ -66,7 +66,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	go handleOutbound(*id, rdb, dg)
+	go handleOutbound(*outbound, rdb, dg)
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
