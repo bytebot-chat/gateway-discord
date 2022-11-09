@@ -53,26 +53,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Register the messageCreate func as a callback for MessageCreate events.
-	fmt.Println("Publishing inbound messages on topic '" + *inbound + "'")
-	dg.AddHandler(messageCreate)
+	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Info().Msg("Discord is now connected!")
+	})
+	// Cleanly close down the Discord session.
+	defer dg.Close()
+	dg.AddHandler(messageCreate)                                                      // Register the messageCreate func as a callback for MessageCreate events.
+	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAllWithoutPrivileged) // Listen for all low-privileged intents
 
-	dg.Identify.Intents = discordgo.IntentsGuildMessages // Only listen for messages
-	err = dg.Open()                                      // Open the websocket and begin listening.
+	err = dg.Open() // Open the websocket and begin listening.
 	if err != nil {
 		log.Err(err).Msg("Unable to open channel for reading messages")
 		os.Exit(1) // Exit if we can't open the channel
 	}
 
-	go handleOutbound(*outbound, rdb, dg)
+	go handleOutbound(*outbound, rdb, dg) // Start listening for outbound messages
+
 	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	log.Info().Msg("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)                                             // Create a channel to listen for signals
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill) // Listen for signals
 	<-sc
-
-	// Cleanly close down the Discord session.
-	dg.Close()
 }
 
 // This function will be called (due to AddHandler above) every time a new
