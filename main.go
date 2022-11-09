@@ -36,8 +36,6 @@ func init() {
 
 	flag.StringVar(&Token, "t", "", "Bot Token") // Discord bot token
 	flag.Parse()                                 // Parse the command line parameters
-
-	parseEnv() // Parse environment variables
 }
 
 func main() {
