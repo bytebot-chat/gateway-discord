@@ -34,17 +34,6 @@ func (m *Message) Marshal() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// MarshalReply converts the message to JSON and adds the metadata from the original message
-// MarshalReply sends a response to the originating channel or direct message but does not do a "discord reply"
-func (m *Message) MarshalReply(meta Metadata, dest string, s string) ([]byte, error) {
-	reply := &MessageSend{
-		Content:   s,
-		ChannelID: dest,
-		Metadata:  meta,
-	}
-	return json.Marshal(reply)
-}
-
 // Unmarshal converts the JSON (in bytes) to a message
 // Example:
 // 	msg := &model.Message{}

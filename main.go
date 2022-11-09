@@ -96,6 +96,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		log.Err(err).Msg("Unable to unmarshal message")
 		return
 	}
+
 	msg.Metadata.ID = uuid.Must(uuid.NewV4(), *new(error)) // Generate a UUID for the message
 	msg.Metadata.Source = *id                              // Set the source to the ID of this gateway
 	stringMsg, _ := json.Marshal(msg)                      // Convert the message to JSON so that we can send it to Redis
@@ -120,6 +121,7 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		log.Debug().Msg(fmt.Sprintf("Will send this message: %t", m.Metadata.Dest == *id))
 		log.Debug().Msg(fmt.Sprintf("Sending to: %s", m.ChannelID))
 		log.Debug().Msg(fmt.Sprintf("Content: %s", m.Content))
