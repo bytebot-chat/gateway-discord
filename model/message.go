@@ -14,7 +14,7 @@ type Message struct {
 }
 
 // MessageSend is the struct that is used to pass messages from the Redis pubsub to the Discord Gateway (outbound messages)
-// Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct is limited to those two fields as well.
+// Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct limits iteslef to those two fields as well.
 // Future work may expand this to include more fields or expand metadata to include more information that can be used to forumlate more complex responses.
 type MessageSend struct {
 	ChannelID string   `json:"channel_id"` // ChannelID is the ID of the discord channel to send the message to
