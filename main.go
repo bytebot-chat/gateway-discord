@@ -20,9 +20,9 @@ import (
 
 // Variables used for command line parameters
 var (
-	Token string
-	ctx   context.Context
-	rdb   *redis.Client
+	Token string          // Discord bot token
+	ctx   context.Context // Redis context
+	rdb   *redis.Client   // Redis client
 
 	redisAddr = flag.String("redis", "localhost:6379", "Address and port of redis host")
 	redisPass = flag.String("rpass", "", "Redis password")
@@ -34,10 +34,10 @@ var (
 func init() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	flag.StringVar(&Token, "t", "", "Bot Token")
-	flag.Parse()
+	flag.StringVar(&Token, "t", "", "Bot Token") // Discord bot token
+	flag.Parse()                                 // Parse the command line parameters
 
-	parseEnv()
+	parseEnv() // Parse environment variables
 }
 
 func main() {
@@ -45,8 +45,8 @@ func main() {
 		Str("Redis address", *redisAddr).
 		Msg("Discord starting up!")
 
-	rdb = rdbConnect(*redisAddr, *redisPass, 1)
-	ctx = context.Background()
+	rdb = rdbConnect(*redisAddr, *redisPass, 1) // Connect to redis
+	ctx = context.Background()                  // Redis context
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
@@ -59,18 +59,18 @@ func main() {
 	fmt.Println("Publishing inbound messages on topic '" + *inbound + "'")
 	dg.AddHandler(messageCreate)
 
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
-	err = dg.Open()
+	dg.Identify.Intents = discordgo.IntentsGuildMessages // Only listen for messages
+	err = dg.Open()                                      // Open the websocket and begin listening.
 	if err != nil {
 		log.Err(err).Msg("Unable to open channel for reading messages")
-		os.Exit(1)
+		os.Exit(1) // Exit if we can't open the channel
 	}
 
 	go handleOutbound(*outbound, rdb, dg)
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	sc := make(chan os.Signal, 1)                                             // Create a channel to listen for signals
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill) // Listen for signals
 	<-sc
 
 	// Cleanly close down the Discord session.
@@ -87,56 +87,63 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	str, _ := json.Marshal(m)
+	str, _ := json.Marshal(m) // Convert the message to JSON so that we can send it to Redis
 	log.Debug().
 		RawJSON("Received message", []byte(str)).
 		Msg("Received message")
 
-	msg := &model.Message{}
-	err := msg.Unmarshal([]byte(str))
+	msg := &model.Message{}           // Create a new message
+	err := msg.Unmarshal([]byte(str)) // Unmarshal the JSON into the message
 	if err != nil {
-		fmt.Println(err)
+		log.Err(err).Msg("Unable to unmarshal message")
 		return
 	}
-	msg.Metadata.ID = uuid.Must(uuid.NewV4(), *new(error))
-	msg.Metadata.Source = *id
-	stringMsg, _ := json.Marshal(msg)
-	rdb.Publish(ctx, *inbound, stringMsg)
+	msg.Metadata.ID = uuid.Must(uuid.NewV4(), *new(error)) // Generate a UUID for the message
+	msg.Metadata.Source = *id                              // Set the source to the ID of this gateway
+	stringMsg, _ := json.Marshal(msg)                      // Convert the message to JSON so that we can send it to Redis
+	rdb.Publish(ctx, *inbound, stringMsg)                  // Publish the message to Redis
 	log.Debug().Msg("Published message to " + *inbound)
-	return
 }
 
+// handleOutbound handles outbound messages from Redis destined for Discord
+// It will subscribe to the given topic and send any messages it receives to Discord
+// Unforunately it uses a slightly different message format than the inbound messages
+// See model.MessageSend for more information
 func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 	log.Info().Msg("Listening for outbound messages on topic '" + sub + "'")
-	ctx := context.Background()
-	topic := rdb.Subscribe(ctx, sub)
-	channel := topic.Channel()
-	for msg := range channel {
+	ctx := context.Background()      // Redis context
+	topic := rdb.Subscribe(ctx, sub) // Subscribe to the given topic
+	channel := topic.Channel()       // Setup a Go channel to capture messages from Redis
+
+	for msg := range channel { // Loop through the messages as they come in
 		log.Debug().Msg("Message received")
-		m := &model.MessageSend{}
-		err := m.Unmarshal([]byte(msg.Payload))
+		m := &model.MessageSend{}               // Create a new message
+		err := m.Unmarshal([]byte(msg.Payload)) // Unpack the message from Redis into Payload field
 		if err != nil {
 			fmt.Println(err)
 		}
 		log.Debug().Msg(fmt.Sprintf("Will send this message: %t", m.Metadata.Dest == *id))
 		log.Debug().Msg(fmt.Sprintf("Sending to: %s", m.ChannelID))
 		log.Debug().Msg(fmt.Sprintf("Content: %s", m.Content))
-		if m.Metadata.Dest == *id {
+		if m.Metadata.Dest == *id { // Check if the message is for this gateway, if not, ignore it
 			s.ChannelMessageSend(m.ChannelID, m.Content)
 		}
 	}
 }
 
+// rdbConnect connects to Redis and returns a client
 func rdbConnect(addr, pass string, db int) *redis.Client {
-	ctx := context.Background()
+	ctx := context.Background() // Redis context
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: pass, // no password set
+		Addr:     addr, // Redis address
+		Password: pass, // Redis password
 		DB:       0,    // use default DB
 	})
 
-	err := rdb.Ping(ctx).Err()
+	err := rdb.Ping(ctx).Err() // Ping Redis to make sure we can connect
 	if err != nil {
+		// if we can't connect, try again in 3 seconds then succeed or give up
+		// yes this is lazy
 		time.Sleep(3 * time.Second)
 		err := rdb.Ping(ctx).Err()
 		if err != nil {

@@ -1,0 +1,6 @@
+*.yaml
+.vscode
+*.json
+*.sh
+*.lock
+__*
