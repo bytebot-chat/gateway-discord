@@ -52,6 +52,7 @@ func (m *Message) Unmarshal(b []byte) error {
 }
 
 // UnmarshalReply converts the JSON (in bytes) to a message
+// This does not set the Metadata field
 // Example:
 // 	msg := &model.MessageSend{}
 // 	if err := msg.Unmarshal([]byte(`{"content":"hello world"}`)); err != nil {
