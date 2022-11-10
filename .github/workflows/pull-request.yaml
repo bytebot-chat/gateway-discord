@@ -5,6 +5,7 @@ on:
 jobs:
   go-test:
     strategy:
+      max-parallel: 1
       matrix:
         go-version:
         - 1.17
