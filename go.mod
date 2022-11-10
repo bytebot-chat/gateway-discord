@@ -1,6 +1,6 @@
 module github.com/bytebot-chat/gateway-discord
 
-go 1.14
+go 1.17
 
 require (
 	github.com/bwmarrin/discordgo v0.26.1
