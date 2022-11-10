@@ -55,8 +55,18 @@ func main() {
 
 // reply replies to a message
 func reply(ctx context.Context, m model.Message, rdb *redis.Client) {
-	log.Debug().Msg("Replying to message")
+	log.Debug().
+		Str("id", m.ID).
+		Str("source", m.Metadata.Source).
+		Str("dest", m.Metadata.Dest).
+		Str("channel", m.ChannelID).
+		Msg("Replying to message")
 	stringMsg, _ := m.RespondToChannelOrThread("discord-pingpong", "pong") // Marshal the content into a reply
 	rdb.Publish(ctx, *outbound, stringMsg)                                 // Publish the message to the outbound topic
-	log.Debug().Str("topic", *outbound).Msg("Published message")
+	log.Debug().
+		Str("id", m.ID).
+		Str("source", m.Metadata.Source).
+		Str("dest", m.Metadata.Dest).
+		Str("topic", *outbound).
+		Msg("Published message")
 }
