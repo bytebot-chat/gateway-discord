@@ -20,15 +20,15 @@ func (m *Message) MarshalReply(meta Metadata, dest string, s string) ([]byte, er
 
 // RespondToChannelOrThread sends a message to the channel or thread that the original message was sent from
 // TODO: Make this actually work. It's just stubbed out for now.
-func (m *Message) RespondToChannelOrThread(sourceMsg Message, sourceApp, destApp, content string) ([]byte, error) {
+func (m *Message) RespondToChannelOrThread(sourceApp, content string) ([]byte, error) {
 
 	reply := &MessageSend{
-		Content:   content,             // Actual text to send
-		ChannelID: sourceMsg.ChannelID, // Send the message to the channel or thread that the original message was sent from
+		Content:   content,     // Actual text to send
+		ChannelID: m.ChannelID, // Send the message to the channel or thread that the original message was sent from
 		Metadata: Metadata{
-			Source: sourceApp,    // the ID of the app sending the message
-			Dest:   destApp,      // The destination of the message is the ID of the app that is receiving the message (ie, 'discord')
-			ID:     uuid.NewV4(), // Generate a new UUID for the message
+			Source: sourceApp,         // the ID of the app sending the message
+			Dest:   m.Metadata.Source, // The destination of the message is the ID of the app that is receiving the message (ie, 'discord')
+			ID:     uuid.NewV4(),      // Generate a new UUID for the message
 		},
 	}
 	return json.Marshal(reply)

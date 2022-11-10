@@ -42,9 +42,11 @@ func (m *Message) Marshal() ([]byte, error) {
 // 	}
 // 	fmt.Println(msg.Content)
 func (m *Message) Unmarshal(b []byte) error {
-	if err := json.Unmarshal(b, m); err != nil {
+	dgMsg := &discordgo.Message{}
+	if err := dgMsg.UnmarshalJSON(b); err != nil {
 		return err
 	}
+	m.Message = dgMsg
 	return nil
 }
 
