@@ -35,6 +35,7 @@ func (m *Message) Marshal() ([]byte, error) {
 }
 
 // Unmarshal converts the JSON (in bytes) to a message
+// This does not set the Metadata field
 // Example:
 // 	msg := &model.Message{}
 // 	if err := msg.Unmarshal([]byte(`{"content":"hello world"}`)); err != nil {

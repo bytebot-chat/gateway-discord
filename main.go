@@ -124,7 +124,11 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 	channel := topic.Channel()       // Setup a Go channel to capture messages from Redis
 
 	for msg := range channel { // Loop through the messages as they come in
-		log.Debug().Str("func", "handleOutbound").Msg("Message received")
+		log.Debug().Str("func", "handleOutbound").
+			Str("topic", sub).
+			Str("payload", msg.Payload).
+			Msg("Received message from Redis")
+
 		m := &model.MessageSend{}               // Create a new message
 		err := m.Unmarshal([]byte(msg.Payload)) // Unpack the message from Redis into Payload field
 		if err != nil {
