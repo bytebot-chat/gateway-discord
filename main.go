@@ -82,7 +82,9 @@ func main() {
 	go handleOutbound(*outbound, rdb, dg) // Start listening for outbound messages
 
 	// Wait here until CTRL-C or other term signal is received.
-	log.Info().Str("func", "main").Msg("Bot is now running. Press CTRL-C to exit.")
+	log.Info().
+		Str("func", "main").
+		Msg("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)                                             // Create a channel to listen for signals
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill) // Listen for signals
 	<-sc
@@ -102,15 +104,32 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := &model.Message{}           // Create a new message
 	err := msg.Unmarshal([]byte(str)) // Unmarshal the JSON into the message
 	if err != nil {
-		log.Err(err).Str("func", "messageCreate").Str("id", msg.ID).Msg("Unable to unmarshal message")
+		log.Err(err).
+			Str("func", "messageCreate").
+			Str("id", msg.ID).
+			Msg("Unable to unmarshal message")
 		return
 	}
 
 	msg.Metadata.ID = uuid.Must(uuid.NewV4(), *new(error)) // Generate a UUID for the message
 	msg.Metadata.Source = *id                              // Set the source to the ID of this gateway
 	stringMsg, _ := json.Marshal(msg)                      // Convert the message to JSON so that we can send it to Redis
-	rdb.Publish(ctx, *inbound, stringMsg)                  // Publish the message to Redis
-	log.Debug().Str("func", "messageCreate").Str("id", msg.Metadata.ID.String()).Msg("Published message to " + *inbound)
+	res := rdb.Publish(ctx, *inbound, stringMsg)           // Publish the message to Redis
+	if res.Err() != nil {
+		log.Err(res.Err()).
+			Str("func", "messageCreate").
+			Str("id", msg.ID).
+			Msg("Unable to publish message to Redis")
+		return
+	}
+
+	log.Debug().
+		Str("func", "messageCreate").
+		Str("id", msg.Metadata.ID.String()).
+		Str("source", msg.Metadata.Source).
+		Str("dest", msg.Metadata.Dest).
+		Str("topic", *inbound).
+		Msg("Published message to Redis")
 }
 
 // handleOutbound handles outbound messages from Redis destined for Discord
@@ -127,22 +146,31 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 		log.Debug().Str("func", "handleOutbound").
 			Str("topic", sub).
 			Str("payload", msg.Payload).
-			Msg("Received message from Redis")
+			Send()
 
 		m := &model.MessageSend{}               // Create a new message
 		err := m.Unmarshal([]byte(msg.Payload)) // Unpack the message from Redis into Payload field
 		if err != nil {
-			log.Err(err).Str("func", "handleOutbound").Msg("Unable to unmarshal message")
+			log.Err(err).Str("func", "handleOutbound").Msg("Unable to unmarshal message") // TODO: Fix this log line
 		}
 
 		log.Debug().
 			Str("func", "handleOutbound").
-			Str("id", m.Metadata.ID.String()).
+			Str("message_id", m.Metadata.ID.String()).
+			Str("message_source", m.Metadata.Source).
+			Str("message_destination", m.Metadata.Dest).
 			Bool("will_send", m.Metadata.Dest == *id).
 			Str("channel", m.ChannelID).
-			Str("content", m.Content)
+			Str("content", m.Content).
+			Send()
+
 		if m.Metadata.Dest == *id { // Check if the message is for this gateway, if not, ignore it
-			s.ChannelMessageSend(m.ChannelID, m.Content)
+			_, err := s.ChannelMessageSend(m.ChannelID, m.Content) // Send the message to Discord
+			if err != nil {
+				log.Err(err).
+					Str("func", "handleOutbound").
+					Msg("Unable to send message to Discord")
+			}
 		}
 	}
 }
