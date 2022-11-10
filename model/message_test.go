@@ -6,6 +6,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/r3labs/diff"
+	uuid "github.com/satori/go.uuid"
 )
 
 func TestMessage_Unmarshal(t *testing.T) {
@@ -19,12 +20,13 @@ func TestMessage_Unmarshal(t *testing.T) {
 		wantErr      bool
 	}{
 		{
-			name: "test unmarsal with the fields we care about",
+			name: "hello world",
 			discordJSON: []byte(`
 			{
 				"content": "hello world"
 			}
 			`),
+			metadataJSON: []byte{},
 			testCase: &Message{
 				Message:  &discordgo.Message{},
 				Metadata: Metadata{},
@@ -36,6 +38,33 @@ func TestMessage_Unmarshal(t *testing.T) {
 				Metadata: Metadata{},
 			},
 			wantErr: false,
+		},
+		{
+			name: "hello world with metadata",
+			discordJSON: []byte(`
+			{
+				"content": "hello world"
+			}
+			`),
+			metadataJSON: []byte(`
+			{
+				"source": "source-app",
+				"dest": "dest-app",
+				"id": "00000000-0000-0000-0000-000000000000"
+			}
+			`),
+			want: &Message{
+				Message: &discordgo.Message{
+					Content: "hello world",
+				},
+				Metadata: Metadata{
+					Source: "source-app",
+					Dest:   "dest-app",
+					ID:     uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000"),
+				},
+			},
+			testCase: &Message{},
+			wantErr:  false,
 		},
 	}
 
