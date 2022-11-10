@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -39,7 +38,13 @@ func init() {
 }
 
 func main() {
-	log.Info().Str("func", "main").Msg("Starting Discord gateway")
+	log.Info().
+		Str("func", "main").
+		Str("id", *id).
+		Str("inbound", *inbound).
+		Str("outbound", *outbound).
+		Str("redis", *redisAddr).
+		Msg("Starting Discord gateway")
 
 	rdb = rdbConnect(*redisAddr, *redisPass, 1) // Connect to redis
 	ctx = context.Background()                  // Redis context
@@ -47,12 +52,19 @@ func main() {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	if err != nil {
-		log.Err(err).Str("func", "main").Msg("Unable to continue without connection. Exiting!")
+		log.Err(err).
+			Str("func", "main").
+			Msg("Unable to continue without connection. Exiting!")
 		os.Exit(1)
 	}
 
 	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Info().Str("func", "main").Msg("Discord is now connected!")
+		log.Info().
+			Str("func", "main").
+			Str("id", r.User.ID).
+			Str("username", r.User.Username).
+			Str("discriminator", r.User.Discriminator).
+			Msg("Discord gateway connected")
 	})
 	// Cleanly close down the Discord session.
 	defer dg.Close()
@@ -61,7 +73,9 @@ func main() {
 
 	err = dg.Open() // Open the websocket and begin listening.
 	if err != nil {
-		log.Err(err).Str("func", "main").Msg("Unable to open channel for reading messages")
+		log.Err(err).
+			Str("func", "main").
+			Msg("Unable to open channel for reading messages")
 		os.Exit(1) // Exit if we can't open the channel
 	}
 
@@ -77,8 +91,6 @@ func main() {
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	log.Debug().Str("func", "messageCreate").Msg(fmt.Sprintf("Message type: %d", m.Type))
 
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
@@ -98,7 +110,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg.Metadata.Source = *id                              // Set the source to the ID of this gateway
 	stringMsg, _ := json.Marshal(msg)                      // Convert the message to JSON so that we can send it to Redis
 	rdb.Publish(ctx, *inbound, stringMsg)                  // Publish the message to Redis
-	log.Debug().Str("func", "messageCreate").Msg("Published message to " + *inbound)
+	log.Debug().Str("func", "messageCreate").Str("id", msg.Metadata.ID.String()).Msg("Published message to " + *inbound)
 }
 
 // handleOutbound handles outbound messages from Redis destined for Discord
@@ -119,9 +131,12 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 			log.Err(err).Str("func", "handleOutbound").Msg("Unable to unmarshal message")
 		}
 
-		log.Debug().Str("func", "handleOutbound").Msg(fmt.Sprintf("Will send this message: %t", m.Metadata.Dest == *id))
-		log.Debug().Str("func", "handleOutbound").Msg(fmt.Sprintf("Sending to: %s", m.ChannelID))
-		log.Debug().Str("func", "handleOutbound").Msg(fmt.Sprintf("Content: %s", m.Content))
+		log.Debug().
+			Str("func", "handleOutbound").
+			Str("id", m.Metadata.ID.String()).
+			Bool("will_send", m.Metadata.Dest == *id).
+			Str("channel", m.ChannelID).
+			Str("content", m.Content)
 		if m.Metadata.Dest == *id { // Check if the message is for this gateway, if not, ignore it
 			s.ChannelMessageSend(m.ChannelID, m.Content)
 		}
@@ -130,7 +145,11 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 
 // rdbConnect connects to Redis and returns a client
 func rdbConnect(addr, pass string, db int) *redis.Client {
-	log.Debug().Str("func", "rdbConnect").Str("addr", addr).Msg("Connecting to Redis")
+	log.Debug().Str("func", "rdbConnect").
+		Str("addr", addr).
+		Int("db", db).
+		Msg("Connecting to Redis")
+
 	ctx := context.Background() // Redis context
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr, // Redis address
@@ -142,11 +161,15 @@ func rdbConnect(addr, pass string, db int) *redis.Client {
 	if err != nil {
 		// if we can't connect, try again in 3 seconds then succeed or give up
 		// yes this is lazy
-		log.Err(err).Str("func", "rdbConnect").Msg("Unable to connect to Redis, trying again in 3 seconds")
+		log.Err(err).
+			Str("func", "rdbConnect").
+			Msg("Unable to connect to Redis, trying again in 3 seconds")
 		time.Sleep(3 * time.Second)
 		err := rdb.Ping(ctx).Err()
 		if err != nil {
-			log.Err(err).Str("func", "rdbConnect").Msg("Unable to connect to Redis, exiting")
+			log.Err(err).
+				Str("func", "rdbConnect").
+				Msg("Unable to connect to Redis, exiting")
 			os.Exit(1)
 		}
 	}
