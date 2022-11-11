@@ -22,6 +22,16 @@ const (
 )
 
 func TestMessage_UnmarshalJSON(t *testing.T) {
+	/*
+		This test case checks that the UnmarshalJSON method returns the correct Message struct
+		The function is intended to unmarshal a JSON string into a Message struct
+		This means the Message struct should have the same values as the JSON string
+
+		Because the *discordgo.Message struct is embedded in the Message struct and also has a MarshalJSON method,
+		go will call the MarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
+		unless we override it with a custom MarshalJSON method in the Message struct, which we do
+
+	*/
 
 	tests := []struct {
 		name        string

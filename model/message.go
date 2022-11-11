@@ -35,7 +35,8 @@ func (m *Message) Marshal() ([]byte, error) {
 }
 
 // Unmarshal converts the JSON (in bytes) to a message
-// This does not set the Metadata field
+// This method is deprecate in favor of the UnmarshalJSON method and will be removed in a future release
+// Correct behavior from this method is not guaranteed
 // Example:
 // 	msg := &model.Message{}
 // 	if err := msg.Unmarshal([]byte(`{"content":"hello world"}`)); err != nil {
@@ -51,6 +52,14 @@ func (m *Message) Unmarshal(b []byte) error {
 }
 
 // UnmarshalJSON converts the JSON (in bytes) to a message
+// Because the *discordgo.Message struct is embedded in the Message struct and also has a MarshalJSON method,
+// go will call the MarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
+// unless we override it with a custom MarshalJSON method in the Message struct, which we do
+// Example:
+// 	msg := &model.Message{}
+// 	if err := msg.UnmarshalJSON([]byte(`{"content":"hello world"}`)); err != nil {
+// 		log.Fatal(err)
+// 	}
 func (m *Message) UnmarshalJSON(b []byte) error {
 	msg := make(map[string]json.RawMessage)
 
@@ -69,24 +78,6 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-/*
-	dgMsg := &discordgo.Message{}
-	if err := dgMsg.UnmarshalJSON(b); err != nil {
-		return err
-	}
-	m.Message = dgMsg
-	return nil
-}
-*/
-
-// UnmarshalReply converts the JSON (in bytes) to a message
-// This does not set the Metadata field
-// Example:
-// 	msg := &model.MessageSend{}
-// 	if err := msg.Unmarshal([]byte(`{"content":"hello world"}`)); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Println(msg.Content)
 func (m *MessageSend) Unmarshal(b []byte) error {
 	if err := json.Unmarshal(b, m); err != nil {
 		return err
