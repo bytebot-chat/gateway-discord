@@ -52,8 +52,8 @@ func (m *Message) Unmarshal(b []byte) error {
 }
 
 // UnmarshalJSON converts the JSON (in bytes) to a message
-// Because the *discordgo.Message struct is embedded in the Message struct and also has a MarshalJSON method,
-// go will call the MarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
+// Because the *discordgo.Message struct is embedded in the Message struct and also has an UnmarshalJSON method,
+// go will call the UnmarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
 // unless we override it with a custom MarshalJSON method in the Message struct, which we do
 // Example:
 // 	msg := &model.Message{}
