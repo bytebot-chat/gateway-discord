@@ -16,10 +16,18 @@ var inbound = flag.String("inbound", "discord-inbound", "Pubsub queue to listen 
 var outbound = flag.String("outbound", "discord-outbound", "Pubsub queue for sending messages outbound")
 
 func main() {
-	log.Debug().Msg("Starting up!")
 	flag.Parse()
+	log.Info().
+		Str("version", "0.0.1").
+		Str("addr", *addr).
+		Str("inbound", *inbound).
+		Str("outbound", *outbound).
+		Msg("Starting pingpong")
+
 	ctx := context.Background() // Redis context
-	log.Debug().Str("address", *addr).Msg("Connecting to redis")
+	log.Debug().
+		Str("address", *addr).
+		Msg("Connecting to redis")
 	rdb := redis.NewClient(&redis.Options{ // Connect to redis
 		Addr: *addr, // Redis address from command line
 		DB:   0,     // Use default DB
@@ -27,27 +35,39 @@ func main() {
 
 	err := rdb.Ping(ctx).Err() // Ping redis to make sure it's up
 	if err != nil {
-		log.Err(err).Msg("Unable to continue without connection. Trying again in 3 seconds")
+		log.Err(err).
+			Str("address", *addr).
+			Msg("Unable to continue without connection. Trying again in 3 seconds")
 		time.Sleep(3 * time.Second) // Wait 3 seconds before trying again
 		err := rdb.Ping(ctx).Err()
 		if err != nil {
-			log.Err(err).Msg("Unable to continue without connection. Exiting!")
+			log.Err(err).
+				Str("address", *addr).
+				Msg("Unable to continue without connection. Exiting!")
 			os.Exit(1)
 		}
 	}
 
-	log.Debug().Str("topic", *inbound).Msg("Subscribing to inbound topic")
 	topic := rdb.Subscribe(ctx, *inbound) // Subscribe to the inbound topic
 	channel := topic.Channel()            // Create a channel to listen for messages on
-	log.Debug().Msg("Listening for messages...")
+	log.Debug().
+		Str("topic", *inbound).
+		Msg("Subscribed to topic")
 	for msg := range channel { // Read messages from the channel in a loop
 		m := &model.Message{}                   // Create a new message
 		err := m.Unmarshal([]byte(msg.Payload)) // Unmarshal the message
 		if err != nil {
-			log.Err(err).Msg("Unable to unmarshal message")
+			log.Err(err).
+				Str("topic", *inbound).
+				Msg("Unable to unmarshal message")
 		}
 		if m.Content == "ping" {
-			log.Debug().Str("id", m.ID).Msg("Received ping")
+			log.Debug().
+				Str("id", m.ID).
+				Str("source", m.Metadata.Source).
+				Str("dest", m.Metadata.Dest).
+				Str("channel", m.ChannelID).
+				Msg("Received ping")
 			reply(ctx, *m, rdb) // Reply to the message
 		}
 	}
