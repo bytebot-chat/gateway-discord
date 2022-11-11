@@ -10,13 +10,6 @@ import (
 )
 
 func TestMessage_RespondToChannelOrThread(t *testing.T) {
-	/*
-		This test case checks that the RespondToChannelOrThread method returns the correct JSON
-		The function is intended to send a message to the channel or thread that the original message was sent from
-		This means the ChannelID of the message should be the same as the ChannelID of the original message and
-		the Metadata.Dest should be the same as the Metadata.Source of the original message
-	*/
-
 	// Setup test cases and expected results through this struct
 	// The test cases are the values of the Message struct that is passed to the RespondToChannelOrThread method
 	// The expected results are the values that the method should return once it has been
