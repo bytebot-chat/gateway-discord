@@ -35,7 +35,7 @@ func (m *Message) Marshal() ([]byte, error) {
 }
 
 // Unmarshal converts the JSON (in bytes) to a message
-// This method is deprecate in favor of the UnmarshalJSON method and will be removed in a future release
+// This method is deprecated in favor of the UnmarshalJSON method and will be removed in a future release
 // Correct behavior from this method is not guaranteed
 // Example:
 // 	msg := &model.Message{}
