@@ -64,11 +64,6 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 				err      error
 			)
 
-			// Generate a new UUID to use as the message ID for both got and want
-			// this is because the UUID is generated in the function we're testing
-			// and we don't want to have to hardcode it in the test case
-			id := uuid.NewV4()
-
 			// Execute the function we're testing
 			gotBytes, err = tt.message.RespondToChannelOrThread(tt.sourceApp, tt.content)
 
@@ -88,8 +83,8 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			}
 
 			// Set the ID of the MessageSend struct to the ID we generated
-			got.Metadata.ID = id
-			tt.want.Metadata.ID = id
+			got.Metadata.ID = uuid.FromStringOrNil(TestMetadataUUID)
+			tt.want.Metadata.ID = uuid.FromStringOrNil(TestMetadataUUID)
 
 			// Compare what we got to what we want from the test case
 			if diff.Changed(got, tt.want) {
