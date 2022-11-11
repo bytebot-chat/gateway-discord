@@ -59,7 +59,7 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			shouldMention: false,
 		},
 		{
-			name: "Basic, reply with no mention",
+			name: "Reply with no mention",
 			message: &Message{
 				Message: &discordgo.Message{
 					ID:        TestInboundDiscordMessageID,
@@ -92,6 +92,41 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			wantErr:       false,
 			shouldReply:   true,
 			shouldMention: false,
+		},
+		{
+			name: "Reply with mention",
+			message: &Message{
+				Message: &discordgo.Message{
+					ID:        TestInboundDiscordMessageID,
+					ChannelID: TestChannelID,
+					Content:   TestInboundMessageBody,
+				},
+				Metadata: Metadata{
+					Source:      "gateway",
+					Dest:        "",
+					ID:          uuid.FromStringOrNil(TestInboundMetadataUUID),
+					Reply:       false, // Inbound message is not a reply
+					InReplyTo:   "",    // Inbound message is not a reply
+					MentionUser: false, // Inbound message does not mention the user
+				},
+			},
+			want: &MessageSend{
+				Content:   TestOutboundMessageBody,
+				ChannelID: TestChannelID, // ChannelID should be the same as the original message
+				Metadata: Metadata{
+					Source:      TestAppName,                                    // Source should be the app sending the response
+					Dest:        TestMetdataSource,                              // Dest should be the source from the original message
+					ID:          uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID
+					Reply:       true,                                           // Outbound message should be a reply to the original message
+					InReplyTo:   TestInboundDiscordMessageID,                    // Outbound message should be a reply to the original message
+					MentionUser: true,                                           // Outbound message should not mention the user
+				},
+			},
+			sourceApp:     TestAppName,
+			content:       TestOutboundMessageBody,
+			wantErr:       false,
+			shouldReply:   true,
+			shouldMention: true,
 		},
 	}
 
