@@ -12,13 +12,19 @@ import (
 
 // Values used in tests
 const (
-	TestChannelID         = "000000000000000000"
-	TestMetadataUUID      = "00000000-0000-0000-0000-000000000000"
-	TestUserID            = "000000000000000000"
-	TestUserName          = "test-user"
-	TestUserDiscriminator = "0000"
-	TestMetdataSource     = "gateway"
-	TestMetdataDest       = ""
+	TestChannelID                = "000000000000000000"
+	TestInboundMetadataUUID      = "00000000-0000-0000-0000-000000000000"
+	TestOutboundMetadataUUID     = "11111111-1111-1111-1111-111111111111"
+	TestInboundDiscordMessageID  = "222222222222222222"
+	TestOutboundDiscordMessageID = "333333333333333333"
+	TestInboundMessageBody       = "hello world"
+	TestOutboundMessageBody      = "goodbye world"
+	TestUserID                   = "000000000000000000"
+	TestUserName                 = "test-user"
+	TestUserDiscriminator        = "0000"
+	TestMetdataSource            = "gateway"
+	TestMetdataDest              = ""
+	TestAppName                  = "test-app"
 )
 
 func TestMessage_UnmarshalJSON(t *testing.T) {
@@ -64,7 +70,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 			},
 			want: &Message{
 				Message: &discordgo.Message{
-					Content:   "hello world",
+					Content:   TestInboundMessageBody,
 					ChannelID: TestChannelID,
 					Author: &discordgo.User{
 						ID:            TestUserID,
@@ -73,9 +79,9 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 					},
 				},
 				Metadata: Metadata{
-					Source: "gateway",
+					Source: TestMetdataSource,
 					Dest:   "",
-					ID:     uuid.FromStringOrNil(TestMetadataUUID),
+					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
 				},
 			},
 			wantErr: false,

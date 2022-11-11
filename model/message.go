@@ -13,20 +13,14 @@ type Message struct {
 	Metadata           Metadata `json:"metadata"`
 }
 
-// MessageSend is the struct that is used to pass messages from the Redis pubsub to the Discord Gateway (outbound messages)
-// Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct limits iteslef to those two fields as well.
-// Future work may expand this to include more fields or expand metadata to include more information that can be used to forumlate more complex responses.
-type MessageSend struct {
-	ChannelID string   `json:"channel_id,omitempty"` // ChannelID is the ID of the discord channel to send the message to
-	Content   string   `json:"content,omitempty"`    // Content is the text body of the message to send
-	Metadata  Metadata `json:"metadata,omitempty"`
-}
-
 // Metadata is used by the Gateway(s) and app(s) to trace messages and identify intended recipients
 type Metadata struct {
-	Source string    `json:"source,omitempty"` // Source is the ID of the Gateway or App that sent the message
-	Dest   string    `json:"dest,omitempty"`   // Dest is the ID of the Gateway or App that the message is intended for
-	ID     uuid.UUID `json:"id,omitempty"`     // ID is a UUID that is generated for each message
+	Source      string    `json:"source,omitempty"`       // Source is the ID of the Gateway or App that sent the message
+	Dest        string    `json:"dest,omitempty"`         // Dest is the ID of the Gateway or App that the message is intended for
+	ID          uuid.UUID `json:"id,omitempty"`           // ID is a UUID that is generated for each message
+	Reply       bool      `json:"reply,omitempty"`        // Reply is a boolean that indicates whether the message is a reply to another message
+	InReplyTo   string    `json:"in_reply_to,omitempty"`  // InReplyTo is the Discord ID of the message that this message is a reply to, not the metadata ID
+	MentionUser bool      `json:"mention_user,omitempty"` // MentionUser is a boolean that indicates whether the message should mention the user that sent the message
 }
 
 // Marhsal converts the message to JSON
@@ -54,7 +48,7 @@ func (m *Message) Unmarshal(b []byte) error {
 // UnmarshalJSON converts the JSON (in bytes) to a message
 // Because the *discordgo.Message struct is embedded in the Message struct and also has an UnmarshalJSON method,
 // go will call the UnmarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
-// unless we override it with a custom MarshalJSON method in the Message struct, which we do
+// unless we override it with our own UnmarshalJSON method in the Message struct, which we do
 // Example:
 // 	msg := &model.Message{}
 // 	if err := msg.UnmarshalJSON([]byte(`{"content":"hello world"}`)); err != nil {
