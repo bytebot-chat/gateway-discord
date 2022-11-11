@@ -10,8 +10,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+// Values used in tests
 const (
-	// TestChannelID is the ID of the channel that the test messages are sent to
 	TestChannelID         = "000000000000000000"
 	TestMetadataUUID      = "00000000-0000-0000-0000-000000000000"
 	TestUserID            = "000000000000000000"
