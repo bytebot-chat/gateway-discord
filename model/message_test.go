@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
@@ -9,80 +10,107 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func TestMessage_Unmarshal(t *testing.T) {
+const (
+	// TestChannelID is the ID of the channel that the test messages are sent to
+	TestChannelID         = "000000000000000000"
+	TestMetadataUUID      = "00000000-0000-0000-0000-000000000000"
+	TestUserID            = "000000000000000000"
+	TestUserName          = "test-user"
+	TestUserDiscriminator = "0000"
+	TestMetdataSource     = "gateway"
+	TestMetdataDest       = ""
+)
+
+func TestMessage_UnmarshalJSON(t *testing.T) {
 
 	tests := []struct {
-		name         string
-		discordJSON  []byte
-		metadataJSON []byte
-		want         *Message
-		testCase     *Message
-		wantErr      bool
+		name        string
+		messageJSON []byte
+		want        *Message
+		testCase    *Message
+		wantErr     bool
 	}{
 		{
 			name: "hello world",
-			discordJSON: []byte(`
-			{
-				"content": "hello world"
-			}
-			`),
-			metadataJSON: []byte{},
+			messageJSON: []byte(`{
+				"metadata": {
+					"source": "gateway",
+					"dest": "",
+					"id": "00000000-0000-0000-0000-000000000000"
+				},
+				"message": {
+					"content": "hello world",
+					"channel_id": "000000000000000000",
+					"author": {
+						"id": "000000000000000000",
+						"username": "test-user",
+						"discriminator": "0000"
+					}
+				}
+			}`),
 			testCase: &Message{
 				Message:  &discordgo.Message{},
 				Metadata: Metadata{},
 			},
 			want: &Message{
 				Message: &discordgo.Message{
-					Content: "hello world",
-				},
-				Metadata: Metadata{},
-			},
-			wantErr: false,
-		},
-		{
-			name: "hello world with metadata",
-			discordJSON: []byte(`
-			{
-				"content": "hello world"
-			}
-			`),
-			metadataJSON: []byte(`
-			{
-				"source": "source-app",
-				"dest": "dest-app",
-				"id": "00000000-0000-0000-0000-000000000000"
-			}
-			`),
-			want: &Message{
-				Message: &discordgo.Message{
-					Content: "hello world",
+					Content:   "hello world",
+					ChannelID: TestChannelID,
+					Author: &discordgo.User{
+						ID:            TestUserID,
+						Username:      TestUserName,
+						Discriminator: TestUserDiscriminator,
+					},
 				},
 				Metadata: Metadata{
-					Source: "source-app",
-					Dest:   "dest-app",
-					ID:     uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000"),
+					Source: "gateway",
+					Dest:   "",
+					ID:     uuid.FromStringOrNil(TestMetadataUUID),
 				},
 			},
-			testCase: &Message{},
-			wantErr:  false,
+			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Unmarshal the discord json into the message and check for deserialization errors
-			if err := tt.testCase.Unmarshal(tt.discordJSON); (err != nil) != tt.wantErr {
-				t.Errorf("Message.Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
+			err := tt.testCase.UnmarshalJSON(tt.messageJSON)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Message.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 
-			// Compare the testCase to the want value
+			// Compare content of messages
 			if diff.Changed(tt.testCase.Message, tt.want.Message) {
-				d, _ := diff.Diff(tt.testCase, tt.want)
-				fmt.Printf("\n--------\nI have:\n\n%+v\n", tt.testCase.Message)
-				fmt.Printf("\n--------\nI want:\n\n%+v\n", tt.want.Message)
-				t.Errorf("Message.Unmarshal() = test case does not match want value: %s", d)
+				t.Errorf("Message.UnmarshalJSON() Message does not match")
+
+				d, err := diff.Diff(tt.testCase.Message, tt.want.Message)
+				if err != nil {
+					t.Errorf("Message.UnmarshalJSON() Diff error = %v", err)
+				}
+
+				for _, c := range d {
+					fmt.Printf("Compare this snippet from %s:\n", strings.Join(c.Path, "."))
+					fmt.Printf("Want: %v\n", c.From)
+					fmt.Printf("Got:  %v\n", c.To)
+				}
+			}
+
+			// Compare metadata
+			if diff.Changed(tt.testCase.Metadata, tt.want.Metadata) {
+				t.Errorf("Message.UnmarshalJSON() Metadata does not match")
+
+				d, err := diff.Diff(tt.testCase.Metadata, tt.want.Metadata)
+				if err != nil {
+					t.Errorf("Message.UnmarshalJSON() Diff error = %v", err)
+				}
+
+				for _, c := range d {
+					fmt.Printf("Compare this snippet from %s:\n", strings.Join(c.Path, "."))
+					fmt.Printf("Want: %v\n", c.From)
+					fmt.Printf("Got:  %v\n", c.To)
+				}
 			}
 		})
 	}
-
 }
