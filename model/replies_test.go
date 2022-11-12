@@ -208,3 +208,49 @@ func TestMessageSend_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestMessageSend_MarshalJSON(t *testing.T) {
+	type fields struct {
+		ChannelID string
+		Content   string
+		Metadata  Metadata
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "Valid JSON",
+			fields: fields{
+				ChannelID: TestChannelID,
+				Content:   TestOutboundMessageBody,
+				Metadata: Metadata{
+					Source: TestAppName,
+					Dest:   TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
+					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
+				},
+			},
+			want:    []byte(`{"channel_id":"` + TestChannelID + `","content":"` + TestOutboundMessageBody + `","metadata":{"source":"` + TestAppName + `","dest":"` + TestMetdataSource + `","id":"` + TestOutboundMetadataUUID + `"}}`),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &MessageSend{
+				ChannelID: tt.fields.ChannelID,
+				Content:   tt.fields.Content,
+				Metadata:  tt.fields.Metadata,
+			}
+			got, err := m.MarshalJSON()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MessageSend.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MessageSend.MarshalJSON() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

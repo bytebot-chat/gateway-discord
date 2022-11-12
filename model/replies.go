@@ -91,3 +91,28 @@ func (m *MessageSend) UnmarshalJSON(b []byte) error {
 
 	return nil
 }
+
+// MarshalJSON converts the message to JSON
+// This method is preferred over the Marshal method and will be the only method in a future release
+// Example:
+// 	msg := &model.MessageSend{
+// 		Content: "hello world",
+//      Metadata: model.Metadata{
+//          Source: "test",
+//          Dest: "discord",
+//      },
+// 	}
+// 	b, err := msg.MarshalJSON()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Println(string(b))
+func (m *MessageSend) MarshalJSON() ([]byte, error) {
+	msg := make(map[string]interface{})
+
+	msg["content"] = m.Content
+	msg["channel_id"] = m.ChannelID
+	msg["metadata"] = m.Metadata
+
+	return json.Marshal(msg)
+}
