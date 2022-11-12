@@ -71,10 +71,3 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 
 	return nil
 }
-
-func (m *MessageSend) Unmarshal(b []byte) error {
-	if err := json.Unmarshal(b, m); err != nil {
-		return err
-	}
-	return nil
-}

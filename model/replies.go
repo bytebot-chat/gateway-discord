@@ -45,3 +45,19 @@ func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldRepl
 		Metadata:  meta,
 	}
 }
+
+// Unmarshal converts the JSON (in bytes) to a message
+// This method is deprecated in favor of the UnmarshalJSON method and will be removed in a future release
+// Correct behavior from this method is not guaranteed
+// Example:
+// 	msg := &model.MessageSend{}
+// 	if err := msg.Unmarshal([]byte(`{"content":"hello world"}`)); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Println(msg.Content)
+func (m *MessageSend) Unmarshal(b []byte) error {
+	if err := json.Unmarshal(b, m); err != nil {
+		return err
+	}
+	return nil
+}
