@@ -50,17 +50,6 @@ func main() {
 		cancel()
 	}()
 
-	// Wait for CTRL-C in a goroutine
-	go func() {
-		select {
-		case <-c: // CTRL-C
-			cancel()
-		case <-ctx.Done():
-		}
-		<-c // Wait for second CTRL-C
-		os.Exit(1)
-	}()
-
 	// Log our input parameters
 	log.Info().
 		Str("func", "main").
@@ -87,4 +76,12 @@ func main() {
 	// Open a connection to Redis pubsub and subscribe to the inbound topic
 	go handleInbound(*inbound, r, dgo)
 
+	// Wait for CTRL-C
+	select {
+	case <-c: // CTRL-C
+		cancel()
+	case <-ctx.Done():
+	}
+	<-c // Wait for second CTRL-C
+	os.Exit(1)
 }
