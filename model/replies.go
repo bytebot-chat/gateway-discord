@@ -61,3 +61,33 @@ func (m *MessageSend) Unmarshal(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalJSON converts the JSON (in bytes) to a message
+// This method is preferred over the Unmarshal method and will be the only method in a future release
+// Example:
+// 	msg := &model.MessageSend{}
+// 	if err := msg.UnmarshalJSON([]byte(`{"content":"hello world"}`)); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Println(msg.Content)
+func (m *MessageSend) UnmarshalJSON(b []byte) error {
+	msg := make(map[string]json.RawMessage)
+
+	if err := json.Unmarshal(b, &msg); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["content"], &m.Content); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["channel_id"], &m.ChannelID); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["metadata"], &m.Metadata); err != nil {
+		return err
+	}
+
+	return nil
+}
