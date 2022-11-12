@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -11,9 +12,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var addr = flag.String("redis", "localhost:6379", "Redis server address")
-var inbound = flag.String("inbound", "discord-inbound", "Pubsub queue to listen for new messages")
-var outbound = flag.String("outbound", "discord-outbound", "Pubsub queue for sending messages outbound")
+const APP_NAME = "pingpong"
+
+var (
+	addr     = flag.String("redis", "localhost:6379", "Redis server address")
+	inbound  = flag.String("inbound", "discord-inbound", "Pubsub queue to listen for new messages")
+	outbound = flag.String("outbound", "discord-outbound", "Pubsub queue for sending messages outbound")
+)
 
 func main() {
 	flag.Parse()
@@ -54,12 +59,14 @@ func main() {
 		Str("topic", *inbound).
 		Msg("Subscribed to topic")
 	for msg := range channel { // Read messages from the channel in a loop
-		m := &model.Message{}                   // Create a new message
-		err := m.Unmarshal([]byte(msg.Payload)) // Unmarshal the message
+		fmt.Println(msg.Payload)                    // Print the message payload
+		m := &model.Message{}                       // Create a new message
+		err := m.UnmarshalJSON([]byte(msg.Payload)) // Unmarshal the message
 		if err != nil {
 			log.Err(err).
 				Str("topic", *inbound).
 				Msg("Unable to unmarshal message")
+			continue
 		}
 		if m.Content == "ping" {
 			log.Debug().
@@ -75,18 +82,30 @@ func main() {
 
 // reply replies to a message
 func reply(ctx context.Context, m model.Message, rdb *redis.Client) {
-	log.Debug().
-		Str("id", m.ID).
-		Str("source", m.Metadata.Source).
-		Str("dest", m.Metadata.Dest).
-		Str("channel", m.ChannelID).
-		Msg("Replying to message")
-	stringMsg, _ := m.RespondToChannelOrThread("discord-pingpong", "pong") // Marshal the content into a reply
-	rdb.Publish(ctx, *outbound, stringMsg)                                 // Publish the message to the outbound topic
-	log.Debug().
-		Str("id", m.ID).
-		Str("source", m.Metadata.Source).
-		Str("dest", m.Metadata.Dest).
-		Str("topic", *outbound).
-		Msg("Published message")
+	// Create a new message
+	// Respond in same channel, do not reply or mention the user
+	msg := m.RespondToChannelOrThread(APP_NAME, "pong", false, false)
+	msg.Content = m.Content // Set the content to the original message
+
+	// Marshal the message
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		log.Err(err).
+			Str("id", m.ID).
+			Str("source", m.Metadata.Source).
+			Str("dest", m.Metadata.Dest).
+			Str("channel", m.ChannelID).
+			Msg("Unable to marshal message")
+	}
+
+	// Publish the message to the outbound topic
+	err = rdb.Publish(ctx, *outbound, b).Err()
+	if err != nil {
+		log.Err(err).
+			Str("id", m.ID).
+			Str("source", m.Metadata.Source).
+			Str("dest", m.Metadata.Dest).
+			Str("channel", m.ChannelID).
+			Msg("Unable to publish message")
+	}
 }
