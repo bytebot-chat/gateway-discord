@@ -2,6 +2,7 @@ package model
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
@@ -32,17 +33,25 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 					ChannelID: TestChannelID,
 				},
 				Metadata: Metadata{
-					Source: "gateway",
-					Dest:   "",
+					Source:      TestMetdataSource,                             // Inbound messages should always have a source or else no app will know where to send responses
+					Dest:        TestMetdataDest,                               // Inbound messages typically will not have a destination
+					ID:          uuid.FromStringOrNil(TestInboundMetadataUUID), // Usually this is set by the app, but we can set it here for testing
+					Reply:       false,                                         // This is the default value, but it's here for clarity
+					InReplyTo:   "",                                            // Inbound messages should never have a reply ID
+					MentionUser: false,                                         // Inbound messages should never have this set to true
 				},
 			},
 			want: &MessageSend{
-				Content:   TestOutboundMessageBody,
-				ChannelID: TestChannelID,
+				Content:          TestOutboundMessageBody,
+				ChannelID:        TestChannelID,
+				MessageReference: discordgo.MessageReference{}, // Should be empty because we're not replying to anything
 				Metadata: Metadata{
-					Source: TestAppName,
-					Dest:   TestMetdataSource,
-					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
+					Source:      TestAppName,       // Should be the app name
+					Dest:        TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
+					ID:          uuid.FromStringOrNil(TestOutboundMetadataUUID),
+					Reply:       false,
+					InReplyTo:   "", // Should be empty because we're not replying to anything
+					MentionUser: false,
 				},
 			},
 			sourceApp:     TestAppName,
@@ -145,10 +154,9 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 
 			// If the changelog is not empty, the test has failed
 			if len(changelog) != 0 {
-				t.Errorf("Message.RespondToChannelOrThread()")
 				// Print the changelog to the console
-				for _, change := range changelog {
-					t.Errorf("Field %s changed from %v to %v", change.Path, change.From, change.To)
+				for _, c := range changelog {
+					t.Errorf("Message.RespondToChannelOrThread() - %s\nCompare this snippet from %s:\nWanted:\t%v\nGot:\t%v\n", tt.name, strings.Join(c.Path, "."), c.From, c.To)
 				}
 			}
 		})

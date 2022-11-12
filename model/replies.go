@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 
+	"github.com/bwmarrin/discordgo"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -10,9 +11,10 @@ import (
 // Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct limits iteslef to those two fields as well.
 // Future work may expand this to include more fields or expand metadata to include more information that can be used to forumlate more complex responses.
 type MessageSend struct {
-	ChannelID string   `json:"channel_id,omitempty"` // ChannelID is the ID of the discord channel to send the message to
-	Content   string   `json:"content,omitempty"`    // Content is the text body of the message to send
-	Metadata  Metadata `json:"metadata,omitempty"`
+	ChannelID        string                     `json:"channel_id,omitempty"`        // ChannelID is the ID of the discord channel to send the message to
+	Content          string                     `json:"content,omitempty"`           // Content is the text body of the message to send
+	Metadata         Metadata                   `json:"metadata,omitempty"`          // Metadata is the metadata that is used to track the message
+	MessageReference discordgo.MessageReference `json:"message_reference,omitempty"` // MessageReference is the message reference that is used to reply to a message
 }
 
 // Deprecated in favor of newer methods that consume the entire model.Message struct
@@ -43,6 +45,11 @@ func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldRepl
 		ChannelID: m.ChannelID,
 		Content:   content,
 		Metadata:  meta,
+		MessageReference: discordgo.MessageReference{
+			MessageID: m.ID,
+			ChannelID: m.ChannelID,
+			GuildID:   m.GuildID,
+		},
 	}
 }
 
