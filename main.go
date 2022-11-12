@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
+	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
@@ -32,6 +34,32 @@ func init() {
 }
 
 func main() {
+	// Hold the program open until CTRL-C is pressed
+	log.Info().Str("func", "main").Msg("Gateway is now running. Press CTRL-C to exit.")
+
+	// Setup context for capturing CTRL-C
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Setup channel for capturing CTRL-C
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	defer func() {
+		signal.Stop(c)
+		cancel()
+	}()
+
+	// Wait for CTRL-C in a goroutine
+	go func() {
+		select {
+		case <-c: // CTRL-C
+			cancel()
+		case <-ctx.Done():
+		}
+		<-c // Wait for second CTRL-C
+		os.Exit(1)
+	}()
 
 	// Log our input parameters
 	log.Info().
@@ -58,8 +86,5 @@ func main() {
 
 	// Open a connection to Redis pubsub and subscribe to the inbound topic
 	go handleInbound(*inbound, r, dgo)
-
-	// Hold the program open until CTRL-C is pressed
-	log.Info().Str("func", "main").Msg("Gateway is now running. Press CTRL-C to exit.")
 
 }
