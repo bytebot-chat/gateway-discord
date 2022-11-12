@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/go-redis/redis/v8"
@@ -8,7 +9,7 @@ import (
 )
 
 // redisConnect is used to manage the connection to redis and gracefully exit if the connection fails
-func redisConnect(addr string, password string, db int) *redis.Client {
+func redisConnect(addr string, password string, db int, ctx context.Context) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,

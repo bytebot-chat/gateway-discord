@@ -79,7 +79,7 @@ func main() {
 		return
 	}
 
-	r := redisConnect(*redisAddr, *redisPass, 0) // Connect to Redis
+	r := redisConnect(*redisAddr, *redisPass, 0, ctx) // Connect to Redis
 
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dgo.AddHandler(messageCreate)
