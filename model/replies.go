@@ -30,14 +30,18 @@ func (m *Message) MarshalReply(meta Metadata, dest string, s string) ([]byte, er
 // RespondToChannelOrThread generates a MessageSend struct that can be used to respond to a channel or thread
 // It optionally allows the message to reply or mention the user that sent the original message
 func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldReply, shouldMention bool) *MessageSend {
+	meta := Metadata{
+		Source:      sourceApp,
+		Dest:        m.Metadata.Source,
+		ID:          uuid.NewV4(),
+		Reply:       shouldReply,
+		InReplyTo:   m.ID,
+		MentionUser: shouldMention,
+	}
 
 	return &MessageSend{
-		Content:   content,     // Actual text to send
-		ChannelID: m.ChannelID, // Send the message to the channel or thread that the original message was sent from
-		Metadata: Metadata{
-			Source: sourceApp,         // the ID of the app sending the message
-			Dest:   m.Metadata.Source, // The destination of the message is the ID of the app that is receiving the message (ie, 'discord')
-			ID:     uuid.NewV4(),      // Generate a new UUID for the message
-		},
+		ChannelID: m.ChannelID,
+		Content:   content,
+		Metadata:  meta,
 	}
 }
