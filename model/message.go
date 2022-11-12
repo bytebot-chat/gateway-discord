@@ -71,3 +71,27 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 
 	return nil
 }
+
+// MarshalJSON converts the message to JSON
+// Because the *discordgo.Message struct is embedded in the Message struct and also has a MarshalJSON method,
+// go will call the MarshalJSON method of the *discordgo.Message struct when the Message struct is marshaled
+// unless we override it with our own MarshalJSON method in the Message struct, which we do
+// Example:
+// 	msg := &model.Message{
+// 		Message: &discordgo.Message{
+// 			Content: "hello world",
+// 		},
+// 	}
+// 	b, err := msg.MarshalJSON()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Println(string(b))
+func (m *Message) MarshalJSON() ([]byte, error) {
+	msg := make(map[string]interface{})
+
+	msg["message"] = m.Message
+	msg["metadata"] = m.Metadata
+
+	return json.Marshal(msg)
+}

@@ -14,7 +14,7 @@ import (
 // See model.MessageSend for more information
 func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 	// Subscribe to the given topic
-	pubsub := rdb.Subscribe(ctx, sub)
+	pubsub := rdb.Subscribe(redisCtx, sub)
 	// Get the channel for the subscription
 	ch := pubsub.Channel()
 	// Loop forever

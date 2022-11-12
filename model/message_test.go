@@ -25,6 +25,7 @@ const (
 	TestMetdataSource            = "gateway"
 	TestMetdataDest              = ""
 	TestAppName                  = "test-app"
+	TestGuildID                  = "000000000000000000"
 )
 
 func TestMessage_UnmarshalJSON(t *testing.T) {
@@ -94,22 +95,21 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 			{
 				"metadata": {},
 				"message": {
-					"id": "1041032867578396712",
-					"channel_id": "1037905587968688178",
-					"guild_id": "1037896477197996182",
-					"content": "test",
-					"timestamp": "2022-11-12T16:52:57.086Z",
+					"id": "` + TestInboundDiscordMessageID + `",
+					"channel_id": "` + TestChannelID + `",
+					"guild_id": "` + TestGuildID + `",
+					"content": "` + TestInboundMessageBody + `",
 					"edited_timestamp": null,
 					"mention_roles": [],
 					"tts": false,
 					"mention_everyone": false,
 					"author": {
-						"id": "179258058118135808",
+						"id": "` + TestUserID + `",
 						"email": "",
-						"username": "fraq",
-						"avatar": "1ac33c0aa68e5fd0ce5a22f7d1e02b22",
+						"username": "` + TestUserName + `",
+						"avatar": "",
 						"locale": "",
-						"discriminator": "1337",
+						"discriminator": "` + TestUserDiscriminator + `",
 						"token": "",
 						"verified": false,
 						"mfa_enabled": false,
@@ -130,7 +130,6 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 					"webhook_id": "",
 					"member": {
 						"guild_id": "",
-						"joined_at": "2022-11-04T01:10:03.358Z",
 						"nick": "",
 						"deaf": false,
 						"mute": false,
@@ -171,7 +170,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 						Email:         "",
 						Avatar:        "",
 						Locale:        "",
-						Discriminator: "1337",
+						Discriminator: TestUserDiscriminator,
 						Token:         "",
 						Verified:      false,
 						Banner:        "",
@@ -181,6 +180,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 						PremiumType:   0,
 						System:        false,
 						Flags:         0,
+						Username:      TestUserName,
 					},
 					Reactions: nil,
 					Pinned:    false,
@@ -230,9 +230,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 				}
 
 				for _, c := range d {
-					fmt.Printf("Compare this snippet from %s:\n", strings.Join(c.Path, "."))
-					fmt.Printf("Want: %v\n", c.From)
-					fmt.Printf("Got:  %v\n", c.To)
+					t.Errorf("Compare this snippet from %s:\nWanted:\t%v\nGot:\t%v\n", strings.Join(c.Path, "."), c.From, c.To)
 				}
 			}
 
@@ -246,9 +244,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 				}
 
 				for _, c := range d {
-					fmt.Printf("Compare this snippet from %s:\n", strings.Join(c.Path, "."))
-					fmt.Printf("Want: %v\n", c.From)
-					fmt.Printf("Got:  %v\n", c.To)
+					t.Errorf("Compare this snippet from %s:\nWanted:\t%v\nGot:\t%v\n", strings.Join(c.Path, "."), c.From, c.To)
 				}
 			}
 		})

@@ -46,25 +46,6 @@ func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldRepl
 	}
 }
 
-// MarshalJSON converts the Message struct to JSON
-// This method is preferred over the Marshal method and will be the only method in a future release
-// Example:
-// 	msg := &model.Message{
-// 		Content: "hello world",
-//      Metadata: model.Metadata{
-//          Source: "test",
-//          Dest: "discord",
-//      },
-// 	}
-// 	b, err := msg.MarshalJSON()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Println(string(b))
-func (m *Message) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m)
-}
-
 // Unmarshal converts the JSON (in bytes) to a message
 // This method is deprecated in favor of the UnmarshalJSON method and will be removed in a future release
 // Correct behavior from this method is not guaranteed
