@@ -9,7 +9,7 @@ import (
 
 // Message is the struct that is used to pass messages from the Gateway to the Redis pubsub (inbound messages)
 type Message struct {
-	*discordgo.Message `json:",omitempty"`
+	*discordgo.Message `json:"message,omitempty"`
 	Metadata           Metadata `json:"metadata"`
 }
 
