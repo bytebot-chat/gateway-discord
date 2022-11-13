@@ -33,12 +33,9 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 					ChannelID: TestChannelID,
 				},
 				Metadata: Metadata{
-					Source:      TestMetdataSource,                             // Inbound messages should always have a source or else no app will know where to send responses
-					Dest:        TestMetdataDest,                               // Inbound messages typically will not have a destination
-					ID:          uuid.FromStringOrNil(TestInboundMetadataUUID), // Usually this is set by the app, but we can set it here for testing
-					Reply:       false,                                         // This is the default value, but it's here for clarity
-					InReplyTo:   "",                                            // Inbound messages should never have a reply ID
-					MentionUser: false,                                         // Inbound messages should never have this set to true
+					Source: TestMetdataSource,                             // Inbound messages should always have a source or else no app will know where to send responses
+					Dest:   TestMetdataDest,                               // Inbound messages typically will not have a destination
+					ID:     uuid.FromStringOrNil(TestInboundMetadataUUID), // Usually this is set by the app, but we can set it here for testing
 				},
 			},
 			want: &MessageSend{
@@ -46,12 +43,9 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 				ChannelID:        TestChannelID,
 				MessageReference: discordgo.MessageReference{}, // Should be empty because we're not replying to anything
 				Metadata: Metadata{
-					Source:      TestAppName,       // Should be the app name
-					Dest:        TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
-					ID:          uuid.FromStringOrNil(TestOutboundMetadataUUID),
-					Reply:       false,
-					InReplyTo:   "", // Should be empty because we're not replying to anything
-					MentionUser: false,
+					Source: TestAppName,       // Should be the app name
+					Dest:   TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
+					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
 				},
 			},
 			sourceApp:     TestAppName,
@@ -64,36 +58,36 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			name: "Reply with no mention",
 			message: &Message{
 				Message: &discordgo.Message{
-					ID:        TestInboundDiscordMessageID,
-					ChannelID: TestChannelID,
+					ID:        TestInboundDiscordMessageID, // This is the ID of the message we will be replying to.
+					ChannelID: TestChannelID,               // This is the ID of the channel the message originated from (or the thread if it was a thread).
 					Content:   TestInboundMessageBody,
+					GuildID:   TestGuildID,
 				},
 				Metadata: Metadata{
-					Source:      "gateway",
-					Dest:        "",
-					ID:          uuid.FromStringOrNil(TestInboundMetadataUUID),
-					Reply:       false, // Inbound message is not a reply
-					InReplyTo:   "",    // Inbound message is not a reply
-					MentionUser: false, // Inbound message does not mention the user
+					Source: TestMetdataSource,                             // Inbound messages should always have a source or else no app will know where to send responses
+					Dest:   TestMetdataDest,                               // Inbound messages typically will not have a destination but we can set it here for testing
+					ID:     uuid.FromStringOrNil(TestInboundMetadataUUID), // Usually this is set by the app, but we can set it here for testing
 				},
 			},
 			want: &MessageSend{
-				Content:   TestOutboundMessageBody,
-				ChannelID: TestChannelID, // ChannelID should be the same as the original message
+				Content:   TestOutboundMessageBody, // This is the text we want to send in the response
+				ChannelID: TestChannelID,           // ChannelID should be the same as the original message. Comes from Message.ChannelID.
+				MessageReference: discordgo.MessageReference{
+					MessageID: TestInboundDiscordMessageID, // This is the ID of the message we are replying to.
+					ChannelID: TestChannelID,               // This is the ID of the channel the message originated from (or the thread if it was a thread).
+					GuildID:   TestGuildID,                 // This is the ID of the guild the message originated from.
+				},
 				Metadata: Metadata{
-					Source:      TestAppName,                                    // Source should be the app sending the response
-					Dest:        TestMetdataSource,                              // Dest should be the source from the original message
-					ID:          uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID
-					Reply:       true,                                           // Outbound message should be a reply to the original message
-					InReplyTo:   TestInboundDiscordMessageID,                    // Outbound message should be a reply to the original message
-					MentionUser: false,                                          // Outbound message should not mention the user
+					Source: TestAppName,                                    // Source should be the app sending the response
+					Dest:   TestMetdataSource,                              // Dest should be the source from the original message. Comes from Message.Metadata.Source.
+					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID v4
 				},
 			},
 			sourceApp:     TestAppName,
 			content:       TestOutboundMessageBody,
 			wantErr:       false,
-			shouldReply:   true,
-			shouldMention: false,
+			shouldReply:   true,  // This should be true because we are replying to a message
+			shouldMention: false, // This should be false because we are not mentioning the original message author
 		},
 		{
 			name: "Reply with mention",
@@ -102,26 +96,26 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 					ID:        TestInboundDiscordMessageID,
 					ChannelID: TestChannelID,
 					Content:   TestInboundMessageBody,
+					GuildID:   TestGuildID,
 				},
 				Metadata: Metadata{
-					Source:      "gateway",
-					Dest:        "",
-					ID:          uuid.FromStringOrNil(TestInboundMetadataUUID),
-					Reply:       false, // Inbound message is not a reply
-					InReplyTo:   "",    // Inbound message is not a reply
-					MentionUser: false, // Inbound message does not mention the user
+					Source: TestMetdataSource,
+					Dest:   TestMetdataDest,
+					ID:     uuid.FromStringOrNil(TestInboundMetadataUUID),
 				},
 			},
 			want: &MessageSend{
 				Content:   TestOutboundMessageBody,
 				ChannelID: TestChannelID, // ChannelID should be the same as the original message
+				MessageReference: discordgo.MessageReference{
+					MessageID: TestInboundDiscordMessageID,
+					ChannelID: TestChannelID,
+					GuildID:   TestGuildID,
+				},
 				Metadata: Metadata{
-					Source:      TestAppName,                                    // Source should be the app sending the response
-					Dest:        TestMetdataSource,                              // Dest should be the source from the original message
-					ID:          uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID
-					Reply:       true,                                           // Outbound message should be a reply to the original message
-					InReplyTo:   TestInboundDiscordMessageID,                    // Outbound message should be a reply to the original message
-					MentionUser: true,                                           // Outbound message should not mention the user
+					Source: TestAppName,                                    // Source should be the app sending the response
+					Dest:   TestMetdataSource,                              // Dest should be the source from the original message
+					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID
 				},
 			},
 			sourceApp:     TestAppName,

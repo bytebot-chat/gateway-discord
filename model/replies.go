@@ -33,23 +33,23 @@ func (m *Message) MarshalReply(meta Metadata, dest string, s string) ([]byte, er
 // It optionally allows the message to reply or mention the user that sent the original message
 func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldReply, shouldMention bool) *MessageSend {
 	meta := Metadata{
-		Source:      sourceApp,
-		Dest:        m.Metadata.Source,
-		ID:          uuid.NewV4(),
-		Reply:       shouldReply,
-		InReplyTo:   m.ID,
-		MentionUser: shouldMention,
+		Source: sourceApp,
+		Dest:   m.Metadata.Source,
+		ID:     uuid.NewV4(),
+	}
+	ref := discordgo.MessageReference{}
+
+	if shouldReply {
+		ref.MessageID = m.ID
+		ref.ChannelID = m.ChannelID
+		ref.GuildID = m.GuildID
 	}
 
 	return &MessageSend{
-		ChannelID: m.ChannelID,
-		Content:   content,
-		Metadata:  meta,
-		MessageReference: discordgo.MessageReference{
-			MessageID: m.ID,
-			ChannelID: m.ChannelID,
-			GuildID:   m.GuildID,
-		},
+		ChannelID:        m.ChannelID,
+		Content:          content,
+		Metadata:         meta,
+		MessageReference: ref,
 	}
 }
 
