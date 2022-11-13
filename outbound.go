@@ -27,7 +27,6 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 		if err != nil {
 			log.Err(err).
 				Str("func", "handleOutbound").
-				Str("id", m.Metadata.ID.String()).
 				Str("topic", sub).
 				Msg("Unable to unmarshal message")
 			continue
