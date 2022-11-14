@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/bytebot-chat/gateway-discord/model"
 	"github.com/go-redis/redis/v8"
@@ -12,7 +14,7 @@ import (
 // If a reply or mention is requested, it will attempt to handle that as well
 // Unforunately it uses a slightly different message format than the inbound messages
 // See model.MessageSend for more information
-func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
+func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx context.Context) {
 	// Subscribe to the given topic
 	pubsub := rdb.Subscribe(redisCtx, sub)
 	// Get the channel for the subscription
@@ -24,6 +26,12 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 		// Unmarshal the message into a MessageSend
 		m := &model.MessageSend{}
 		err := m.UnmarshalJSON([]byte(msg.Payload))
+
+		log.Debug().
+			Str("topic", sub).
+			Str("payload", msg.Payload).
+			Msg("Received message from Redis")
+
 		if err != nil {
 			log.Err(err).
 				Str("func", "handleOutbound").
@@ -32,7 +40,7 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session) {
 			continue
 		}
 		// Send the message to Discord
-		_, err = s.ChannelMessageSend(m.Metadata.Dest, m.Content)
+		_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
 		if err != nil {
 			log.Err(err).
 				Str("func", "handleOutbound").

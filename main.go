@@ -120,6 +120,15 @@ func main() {
 	}
 	defer dgo.Close()
 
+	// Subscribe to the outbound queue
+	log.Info().
+		Str("func", "main").
+		Str("queue", *outbound).
+		Msg("Subscribing to outbound queue")
+
+	// Subscribe to the outbound queue
+	go handleOutbound(*outbound, rdb, dgo, redisCtx)
+
 	// for loop to hold the program open until CTRL-C is pressed
 	for {
 		select {
