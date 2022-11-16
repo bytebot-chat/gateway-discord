@@ -18,19 +18,23 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx con
 	// Subscribe to the given topic
 	pubsub := rdb.Subscribe(redisCtx, sub)
 	// Get the channel for the subscription
-	ch := pubsub.Channel()
+	outbound := pubsub.Channel()
+
 	// Loop forever
 	for {
 		// Wait for a message
-		msg := <-ch
-		// Unmarshal the message into a MessageSend
-		m := &model.MessageSend{}
-		err := m.UnmarshalJSON([]byte(msg.Payload))
+		msg := <-outbound
 
+		// Do this before unmarshalling the message
+		// Unmarshaling can crash the process and we want to log the message before that happens
 		log.Debug().
 			Str("topic", sub).
 			Str("payload", msg.Payload).
 			Msg("Received message from Redis")
+
+		// Unmarshal the message into a MessageSend
+		m := &model.MessageSend{}
+		err := m.UnmarshalJSON([]byte(msg.Payload))
 
 		if err != nil {
 			log.Err(err).

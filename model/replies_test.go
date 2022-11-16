@@ -39,13 +39,16 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 				},
 			},
 			want: &MessageSend{
-				Content:          TestOutboundMessageBody,
-				ChannelID:        TestChannelID,
-				MessageReference: discordgo.MessageReference{}, // Should be empty because we're not replying to anything
+				Content:   TestOutboundMessageBody,
+				ChannelID: TestChannelID,
 				Metadata: Metadata{
 					Source: TestAppName,       // Should be the app name
 					Dest:   TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
 					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
+				},
+				PreviousMessage: &discordgo.Message{
+					Content:   TestInboundMessageBody,
+					ChannelID: TestChannelID,
 				},
 			},
 			sourceApp:     TestAppName,
@@ -72,15 +75,16 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			want: &MessageSend{
 				Content:   TestOutboundMessageBody, // This is the text we want to send in the response
 				ChannelID: TestChannelID,           // ChannelID should be the same as the original message. Comes from Message.ChannelID.
-				MessageReference: discordgo.MessageReference{
-					MessageID: TestInboundDiscordMessageID, // This is the ID of the message we are replying to.
-					ChannelID: TestChannelID,               // This is the ID of the channel the message originated from (or the thread if it was a thread).
-					GuildID:   TestGuildID,                 // This is the ID of the guild the message originated from.
-				},
 				Metadata: Metadata{
 					Source: TestAppName,                                    // Source should be the app sending the response
 					Dest:   TestMetdataSource,                              // Dest should be the source from the original message. Comes from Message.Metadata.Source.
 					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID v4
+				},
+				PreviousMessage: &discordgo.Message{
+					ID:        TestInboundDiscordMessageID, // This is the ID of the message we will be replying to.
+					ChannelID: TestChannelID,               // This is the ID of the channel the message originated from (or the thread if it was a thread).
+					Content:   TestInboundMessageBody,
+					GuildID:   TestGuildID,
 				},
 			},
 			sourceApp:     TestAppName,
@@ -107,15 +111,16 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 			want: &MessageSend{
 				Content:   TestOutboundMessageBody,
 				ChannelID: TestChannelID, // ChannelID should be the same as the original message
-				MessageReference: discordgo.MessageReference{
-					MessageID: TestInboundDiscordMessageID,
-					ChannelID: TestChannelID,
-					GuildID:   TestGuildID,
-				},
 				Metadata: Metadata{
 					Source: TestAppName,                                    // Source should be the app sending the response
 					Dest:   TestMetdataSource,                              // Dest should be the source from the original message
 					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID), // ID should be a new UUID
+				},
+				PreviousMessage: &discordgo.Message{
+					ID:        TestInboundDiscordMessageID,
+					ChannelID: TestChannelID,
+					Content:   TestInboundMessageBody,
+					GuildID:   TestGuildID,
 				},
 			},
 			sourceApp:     TestAppName,
@@ -159,9 +164,11 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 
 func TestMessageSend_UnmarshalJSON(t *testing.T) {
 	type fields struct {
-		ChannelID string
-		Content   string
-		Metadata  Metadata
+		ChannelID     string
+		Content       string
+		Metadata      Metadata
+		ShouldReply   bool
+		ShouldMention bool
 	}
 	type args struct {
 		b []byte
@@ -191,7 +198,10 @@ func TestMessageSend_UnmarshalJSON(t *testing.T) {
 						"source": "` + TestAppName + `",
 						"dest": "` + TestMetdataSource + `",
 						"id": "` + TestOutboundMetadataUUID + `"
-					}
+					},
+					"should_reply": false,
+					"should_mention": false,
+					"previous_message": null
 				}`),
 			},
 			wantErr: false,
@@ -200,9 +210,12 @@ func TestMessageSend_UnmarshalJSON(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &MessageSend{
-				ChannelID: tt.fields.ChannelID,
-				Content:   tt.fields.Content,
-				Metadata:  tt.fields.Metadata,
+				ChannelID:       tt.fields.ChannelID,
+				Content:         tt.fields.Content,
+				Metadata:        tt.fields.Metadata,
+				ShouldReply:     tt.fields.ShouldReply,
+				ShouldMention:   tt.fields.ShouldMention,
+				PreviousMessage: &discordgo.Message{},
 			}
 			if err := m.UnmarshalJSON(tt.args.b); (err != nil) != tt.wantErr {
 				t.Errorf("MessageSend.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
@@ -213,9 +226,12 @@ func TestMessageSend_UnmarshalJSON(t *testing.T) {
 
 func TestMessageSend_MarshalJSON(t *testing.T) {
 	type fields struct {
-		ChannelID string
-		Content   string
-		Metadata  Metadata
+		ChannelID       string
+		Content         string
+		Metadata        Metadata
+		PreviousMessage *discordgo.Message
+		ShouldReply     bool
+		ShouldMention   bool
 	}
 	tests := []struct {
 		name    string
@@ -233,8 +249,11 @@ func TestMessageSend_MarshalJSON(t *testing.T) {
 					Dest:   TestMetdataSource, // Outbound messages should always have a destination or else no app will know to process them
 					ID:     uuid.FromStringOrNil(TestOutboundMetadataUUID),
 				},
+				ShouldReply:   false,
+				ShouldMention: false,
 			},
-			want:    []byte(`{"channel_id":"` + TestChannelID + `","content":"` + TestOutboundMessageBody + `","metadata":{"source":"` + TestAppName + `","dest":"` + TestMetdataSource + `","id":"` + TestOutboundMetadataUUID + `"}}`),
+			want: []byte(`{"channel_id":"` + TestChannelID + `","content":"` + TestOutboundMessageBody + `","metadata":{"source":"` + TestAppName + `","dest":"` + TestMetdataSource + `","id":"` + TestOutboundMetadataUUID + `"},"previous_message":null,"should_mention":false,"should_reply":false}`),
+
 			wantErr: false,
 		},
 	}
@@ -250,8 +269,15 @@ func TestMessageSend_MarshalJSON(t *testing.T) {
 				t.Errorf("MessageSend.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MessageSend.MarshalJSON() = %v, want %v", got, tt.want)
+
+			// Compare the content of the messages
+			d, err := diff.Diff(string(got), string(tt.want))
+			if err != nil {
+				t.Errorf("MessageSend.MarshalJSON() Diff error = %v", err)
+			}
+
+			for _, c := range d {
+				t.Errorf("MessageSend.MarshalJSON() - %s\nCompare this snippet from %s:\nGot:\t%v\nWanted:\t%v\n", tt.name, strings.Join(c.Path, "."), c.From, c.To)
 			}
 		})
 	}
