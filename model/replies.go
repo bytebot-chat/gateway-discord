@@ -15,6 +15,8 @@ type MessageSend struct {
 	Content         string             `json:"content,omitempty"`          // Content is the text body of the message to send
 	Metadata        Metadata           `json:"metadata,omitempty"`         // Metadata is the metadata that is used to track the message
 	PreviousMessage *discordgo.Message `json:"previous_message,omitempty"` // PreviousMessage is the message that triggered this message
+	ShouldReply     bool               `json:"should_reply,omitempty"`     // ShouldReply is a flag that indicates if the message should reply to the user that sent the previous message
+	ShouldMention   bool               `json:"should_mention,omitempty"`   // ShouldMention is a flag that indicates if the message should mention the user that sent the previous message
 }
 
 // Deprecated in favor of newer methods that consume the entire model.Message struct
@@ -48,6 +50,8 @@ func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldRepl
 		Content:         content,
 		Metadata:        meta,
 		PreviousMessage: m.Message,
+		ShouldReply:     shouldReply,
+		ShouldMention:   shouldMention,
 	}
 }
 
@@ -94,6 +98,18 @@ func (m *MessageSend) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	if err := json.Unmarshal(msg["previous_message"], &m.PreviousMessage); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["should_reply"], &m.ShouldReply); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["should_mention"], &m.ShouldMention); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -118,6 +134,9 @@ func (m *MessageSend) MarshalJSON() ([]byte, error) {
 	msg["content"] = m.Content
 	msg["channel_id"] = m.ChannelID
 	msg["metadata"] = m.Metadata
+	msg["previous_message"] = m.PreviousMessage
+	msg["should_reply"] = m.ShouldReply
+	msg["should_mention"] = m.ShouldMention
 
 	return json.Marshal(msg)
 }

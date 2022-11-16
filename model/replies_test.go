@@ -86,6 +86,8 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 					Content:   TestInboundMessageBody,
 					GuildID:   TestGuildID,
 				},
+				ShouldReply:   true,  // This should be true because we are replying to a message
+				ShouldMention: false, // This should be false because we are not mentioning the original message author
 			},
 			sourceApp:     TestAppName,
 			content:       TestOutboundMessageBody,
@@ -122,6 +124,8 @@ func TestMessage_RespondToChannelOrThread(t *testing.T) {
 					Content:   TestInboundMessageBody,
 					GuildID:   TestGuildID,
 				},
+				ShouldReply:   true, // This should be true because we are replying to a message
+				ShouldMention: true, // This should be true because we are mentioning the original message author
 			},
 			sourceApp:     TestAppName,
 			content:       TestOutboundMessageBody,

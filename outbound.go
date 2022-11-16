@@ -43,16 +43,27 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx con
 				Msg("Unable to unmarshal message")
 			continue
 		}
+
 		// Send the message to Discord
-		_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
-		if err != nil {
-			log.Err(err).
+		if m.ShouldReply {
+			log.Debug().
 				Str("func", "handleOutbound").
 				Str("id", m.Metadata.ID.String()).
-				Str("topic", sub).
-				Msg("Unable to send message to Discord")
-			continue
+				Msg("Reply requested")
+
+			_, _ = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
+		} else {
+			_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
+			if err != nil {
+				log.Err(err).
+					Str("func", "handleOutbound").
+					Str("id", m.Metadata.ID.String()).
+					Str("topic", sub).
+					Msg("Unable to send message to Discord")
+				continue
+			}
 		}
+
 		log.Debug().
 			Str("func", "handleOutbound").
 			Str("id", m.Metadata.ID.String()).
