@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 
+	"github.com/bwmarrin/discordgo"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -10,9 +11,12 @@ import (
 // Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct limits iteslef to those two fields as well.
 // Future work may expand this to include more fields or expand metadata to include more information that can be used to forumlate more complex responses.
 type MessageSend struct {
-	ChannelID string   `json:"channel_id,omitempty"` // ChannelID is the ID of the discord channel to send the message to
-	Content   string   `json:"content,omitempty"`    // Content is the text body of the message to send
-	Metadata  Metadata `json:"metadata,omitempty"`
+	ChannelID       string             `json:"channel_id,omitempty"`       // ChannelID is the ID of the discord channel to send the message to
+	Content         string             `json:"content,omitempty"`          // Content is the text body of the message to send
+	Metadata        Metadata           `json:"metadata,omitempty"`         // Metadata is the metadata that is used to track the message
+	PreviousMessage *discordgo.Message `json:"previous_message,omitempty"` // PreviousMessage is the message that triggered this message
+	ShouldReply     bool               `json:"should_reply,omitempty"`     // ShouldReply is a flag that indicates if the message should reply to the user that sent the previous message
+	ShouldMention   bool               `json:"should_mention,omitempty"`   // ShouldMention is a flag that indicates if the message should mention the user that sent the previous message
 }
 
 // Deprecated in favor of newer methods that consume the entire model.Message struct
@@ -29,20 +33,25 @@ func (m *Message) MarshalReply(meta Metadata, dest string, s string) ([]byte, er
 
 // RespondToChannelOrThread generates a MessageSend struct that can be used to respond to a channel or thread
 // It optionally allows the message to reply or mention the user that sent the original message
+//
+// Typically when constructing replies you need access to the discordgo.Session but
+// applications that use this library may not have access to that object, so it actually gets handled in the gateway
+// this constraint forces the MessageSend struct to be a little bigger than I would like it to be but it's necessary
+// for now to have the correct context to respond to messages
 func (m *Message) RespondToChannelOrThread(sourceApp, content string, shouldReply, shouldMention bool) *MessageSend {
 	meta := Metadata{
-		Source:      sourceApp,
-		Dest:        m.Metadata.Source,
-		ID:          uuid.NewV4(),
-		Reply:       shouldReply,
-		InReplyTo:   m.ID,
-		MentionUser: shouldMention,
+		Source: sourceApp,
+		Dest:   m.Metadata.Source,
+		ID:     uuid.NewV4(),
 	}
 
 	return &MessageSend{
-		ChannelID: m.ChannelID,
-		Content:   content,
-		Metadata:  meta,
+		ChannelID:       m.ChannelID,
+		Content:         content,
+		Metadata:        meta,
+		PreviousMessage: m.Message,
+		ShouldReply:     shouldReply,
+		ShouldMention:   shouldMention,
 	}
 }
 
@@ -89,6 +98,18 @@ func (m *MessageSend) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	if err := json.Unmarshal(msg["previous_message"], &m.PreviousMessage); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["should_reply"], &m.ShouldReply); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(msg["should_mention"], &m.ShouldMention); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -113,6 +134,9 @@ func (m *MessageSend) MarshalJSON() ([]byte, error) {
 	msg["content"] = m.Content
 	msg["channel_id"] = m.ChannelID
 	msg["metadata"] = m.Metadata
+	msg["previous_message"] = m.PreviousMessage
+	msg["should_reply"] = m.ShouldReply
+	msg["should_mention"] = m.ShouldMention
 
 	return json.Marshal(msg)
 }

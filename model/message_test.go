@@ -12,20 +12,20 @@ import (
 
 // Values used in tests
 const (
-	TestChannelID                = "000000000000000000"
+	TestChannelID                = "test-channel-id"
 	TestInboundMetadataUUID      = "00000000-0000-0000-0000-000000000000"
 	TestOutboundMetadataUUID     = "11111111-1111-1111-1111-111111111111"
-	TestInboundDiscordMessageID  = "222222222222222222"
-	TestOutboundDiscordMessageID = "333333333333333333"
-	TestInboundMessageBody       = "hello world"
-	TestOutboundMessageBody      = "goodbye world"
-	TestUserID                   = "000000000000000000"
-	TestUserName                 = "test-user"
+	TestInboundDiscordMessageID  = "test-inbound-discord-message-id"
+	TestOutboundDiscordMessageID = "test-outbound-discord-message-id"
+	TestInboundMessageBody       = "test-inbound-message-body"
+	TestOutboundMessageBody      = "test-outbound-message-body"
+	TestUserID                   = "test-user-id"
+	TestUserName                 = "test-user-name"
 	TestUserDiscriminator        = "0000"
-	TestMetdataSource            = "gateway"
-	TestMetdataDest              = ""
+	TestMetdataSource            = "test-source"
+	TestMetdataDest              = "test-dest"
 	TestAppName                  = "test-app"
-	TestGuildID                  = "000000000000000000"
+	TestGuildID                  = "test-guild-id"
 )
 
 func TestMessage_UnmarshalJSON(t *testing.T) {
@@ -52,16 +52,16 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 			name: "hello world",
 			messageJSON: []byte(`{
 				"metadata": {
-					"source": "gateway",
+					"source": "` + TestMetdataSource + `",
 					"dest": "",
 					"id": "00000000-0000-0000-0000-000000000000"
 				},
 				"message": {
-					"content": "hello world",
-					"channel_id": "000000000000000000",
+					"content": "` + TestInboundMessageBody + `",
+					"channel_id": "` + TestChannelID + `",
 					"author": {
-						"id": "000000000000000000",
-						"username": "test-user",
+						"id": "` + TestUserID + `",
+						"username": "` + TestUserName + `",
 						"discriminator": "0000"
 					}
 				}
@@ -161,7 +161,7 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 				Message: &discordgo.Message{
 					ID:              TestInboundDiscordMessageID,
 					ChannelID:       TestChannelID,
-					GuildID:         TestChannelID,
+					GuildID:         TestGuildID,
 					Content:         TestInboundMessageBody,
 					MentionRoles:    []string{},
 					MentionEveryone: false,

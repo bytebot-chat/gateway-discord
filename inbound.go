@@ -30,12 +30,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Set the metadata before sending it to Redis
 	msg.Metadata = model.Metadata{
-		Source:      *id,
-		Dest:        "",
-		ID:          uuid.NewV4(),
-		Reply:       false,
-		InReplyTo:   "",
-		MentionUser: false,
+		Source: *id,
+		Dest:   "",
+		ID:     uuid.NewV4(),
 	}
 
 	// Marshal the message to JSON

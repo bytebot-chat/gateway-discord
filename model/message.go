@@ -15,12 +15,9 @@ type Message struct {
 
 // Metadata is used by the Gateway(s) and app(s) to trace messages and identify intended recipients
 type Metadata struct {
-	Source      string    `json:"source,omitempty"`       // Source is the ID of the Gateway or App that sent the message
-	Dest        string    `json:"dest,omitempty"`         // Dest is the ID of the Gateway or App that the message is intended for
-	ID          uuid.UUID `json:"id,omitempty"`           // ID is a UUID that is generated for each message
-	Reply       bool      `json:"reply,omitempty"`        // Reply is a boolean that indicates whether the message is a reply to another message
-	InReplyTo   string    `json:"in_reply_to,omitempty"`  // InReplyTo is the Discord ID of the message that this message is a reply to, not the metadata ID
-	MentionUser bool      `json:"mention_user,omitempty"` // MentionUser is a boolean that indicates whether the message should mention the user that sent the message
+	Source string    `json:"source,omitempty"` // Source is the ID of the Gateway or App that sent the message
+	Dest   string    `json:"dest,omitempty"`   // Dest is the ID of the Gateway or App that the message is intended for
+	ID     uuid.UUID `json:"id,omitempty"`     // ID is a UUID that is generated for each message
 }
 
 // Marhsal converts the message to JSON
