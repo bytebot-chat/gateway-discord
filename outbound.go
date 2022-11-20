@@ -45,30 +45,13 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx con
 		}
 
 		// Send the message to Discord
-<<<<<<< HEAD
-=======
-		if m.ShouldMention {
-			m.Content = "<@" + m.PreviousMessage.Author.ID + "> " + m.Content
-		}
->>>>>>> 50e5921181a8fa4e6235776322790611ead08f1d
 		if m.ShouldReply {
 			log.Debug().
 				Str("func", "handleOutbound").
 				Str("id", m.Metadata.ID.String()).
 				Msg("Reply requested")
 
-<<<<<<< HEAD
 			_, _ = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
-=======
-			_, err = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
-			if err != nil {
-				log.Err(err).
-					Str("func", "handleOutbound").
-					Str("id", m.Metadata.ID.String()).
-					Msg("Unable to send reply")
-				continue // No reason to keep processing if we can't send the message
-			}
->>>>>>> 50e5921181a8fa4e6235776322790611ead08f1d
 		} else {
 			_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
 			if err != nil {

@@ -106,11 +106,7 @@ func main() {
 
 		// Use a convenience method to create a new MessageSend struct
 		// This method takes the app name, the content of the message to send, whether to reply to the message, and whether to mention the user who sent the message
-<<<<<<< HEAD
-		resp := message.RespondToChannelOrThread(APP_NAME, "Pong with reply", true, false)
-=======
 		resp := message.RespondToChannelOrThread(APP_NAME, "pong from golang", true, false)
->>>>>>> 50e5921181a8fa4e6235776322790611ead08f1d
 
 		// Debug log the response
 		log.Debug().
