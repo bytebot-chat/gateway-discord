@@ -51,7 +51,14 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx con
 				Str("id", m.Metadata.ID.String()).
 				Msg("Reply requested")
 
-			_, _ = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
+			_, err = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
+			if err != nil {
+				log.Err(err).
+					Str("func", "handleOutbound").
+					Str("id", m.Metadata.ID.String()).
+					Msg("Unable to send reply")
+				continue // No reason to keep processing if we can't send the message
+			}
 		} else {
 			_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
 			if err != nil {
