@@ -1,3 +1,4 @@
 # Bytebot Discord Gateway
 
-[Add Bytebot to your Discord server!](https://discord.com/api/oauth2/authorize?client_id=853394505625632768&permissions=67584&scope=bot)
+[![Docker Build and Push](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml/badge.svg?branch=0.0.1)](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml)
+![Latest Release](https://img.shields.io/github/v/release/bytebot-chat/gateway-discord?sort=semver&style=plastic)
