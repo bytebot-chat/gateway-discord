@@ -77,7 +77,7 @@ def main():
                 logging.info("Responding to ping")
                 # respond to the channel or thread that the message was sent in
                 pong = respondToChannelOrThread(
-                    msg, 'python-pingpong', 'pong from python', should_reply=True)
+                    msg, 'python-pingpong', 'pong from python', should_reply=False, should_mention=True)
                 # send the json message to the outbound queue
                 r.publish(args.outbound, json.dumps(pong))
 
