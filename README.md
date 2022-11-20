@@ -3,6 +3,19 @@
 [![Docker Build and Push](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml/badge.svg?branch=0.0.1)](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml)
 ![Latest Release](https://img.shields.io/github/v/release/bytebot-chat/gateway-discord?sort=semver&style=plastic)
 
+## Table of Contents
+- [Introduction](#introduction)
+- [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Docker](#docker)
+    - [Docker-Compose](#docker-compose)
+    - [Manual](#manual)
+- [Usage](#usage)
+    - [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
 ## Introduction
 
 This is the Discord gateway for the Bytebot chat ecosystem. It is meant to be a relatively simple gateway that can be used to connect to Discord and relay messages to and from the Bytebot ecosystem. By using this gateway, you can connect all of your apps to Discord without having to write a Discord bot for each one or managing multiple sets of credentials. Business logic is handled by the Bytebot ecosystem, not the gateway, so you can focus on building your app and not on the Discord API.
@@ -61,15 +74,15 @@ The gateway can currently only be configured by CLI flags. The following table s
 | outbound | The channel to publish outbound messages to | `discord-outbound` |
 | verbose | Whether to print verbose logs | `false` |
 
-### Contributing
+## Contributing
 
 If you would like to contribute to this project, please see the [contributing guidelines](CONTRIBUTING.md).
 
-### License
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
-### Acknowledgements
+## Acknowledgements
 
 - @m-242 and @parsec for endless code review, suggestions, and tolerating me blowing up their Discord servers with test messages.
 - @drewpearce for early iterations and inspiration for the project from a prior project, [Legobot/Legobot](https://github.com/Legobot/).
