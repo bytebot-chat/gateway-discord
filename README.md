@@ -2,7 +2,7 @@
 
 [![Docker Build and Push](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml/badge.svg?branch=0.0.1)](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml)
 ![Latest Release](https://img.shields.io/github/v/release/bytebot-chat/gateway-discord?sort=semver)
-![Go Report Card](https://goreportcard.com/badge/github.com/bytebot-chat/gateway-discord)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bytebot-chat/gateway-discord)](https://goreportcard.com/report/github.com/bytebot-chat/gateway-discord)
 [![Go Reference](https://pkg.go.dev/badge/github.com/bytebot-chat/gateway-discord.svg)](https://pkg.go.dev/github.com/bytebot-chat/gateway-discord)
 
 ## Table of Contents
