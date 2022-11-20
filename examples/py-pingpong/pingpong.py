@@ -13,15 +13,24 @@ def respondToChannelOrThread(message, source, content, should_reply=False, shoul
 
     msg = dict({})
     metadata = dict({})
+    # source of the message is the name of the bot/app
     metadata['source'] = source
-    metadata['dest'] = 'discord'
+    # destination is the source of the message
+    metadata['dest'] = message['metadata']['source']
+    # generate a random UUID for the message, must be a string
     metadata['id'] = str(uuid.uuid4())
+    # add the empty metadata dict to the message dict as the metadata key
     msg['metadata'] = metadata
 
+    # reply to the same channel as the message
     msg['channel_id'] = message['message']['channel_id']
+    # set the content of the message to the content argument
     msg['content'] = content
+    # set the previous message to the message that triggered the response. Discord uses this for context when replying to a message.
     msg['previous_message'] = message['message']
+    # should_reply is a boolean that tells Discord whether or not to reply to the message that triggered the response. If should_reply is true, Discord will reply to the message that triggered the response. If should_reply is false, Discord will send the response as a new message in the channel.
     msg['should_reply'] = should_reply
+    # should_mention is a boolean that tells Discord whether or not to mention the user that triggered the response. If should_mention is true, Discord will mention the user that triggered the response. If should_mention is false, Discord will not mention the user that triggered the response.
     msg['should_mention'] = should_mention
 
     return msg
@@ -66,8 +75,10 @@ def main():
             if msg['message']['content'] == 'ping':
                 # Respond with a pong
                 logging.info("Responding to ping")
+                # respond to the channel or thread that the message was sent in
                 pong = respondToChannelOrThread(
                     msg, 'python-pingpong', 'pong from python', should_reply=True)
+                # send the json message to the outbound queue
                 r.publish(args.outbound, json.dumps(pong))
 
 
