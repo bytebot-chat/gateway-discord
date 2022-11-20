@@ -26,7 +26,7 @@ var (
 	redisPass = flag.String("rpass", "", "Redis password")
 	id        = flag.String("id", "discord", "ID to use when publishing messages")
 	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
-	outbound  = flag.String("outbound", *id, "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
+	outbound  = flag.String("outbound", "discord-outbound", "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
 	verbose   = flag.Bool("verbose", false, "Enable verbose logging")
 )
 
