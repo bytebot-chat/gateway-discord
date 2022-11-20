@@ -1,9 +1,12 @@
 # Bytebot Discord Gateway
 
-[![Docker Build and Push](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml/badge.svg?branch=0.0.1)](https://github.com/bytebot-chat/gateway-discord/actions/workflows/docker_build.yaml)
-![Latest Release](https://img.shields.io/github/v/release/bytebot-chat/gateway-discord?sort=semver)
+[![CI](https://github.com/bytebot-chat/gateway-discord/actions/workflows/pull-request.yaml/badge.svg)](https://github.com/bytebot-chat/gateway-discord/actions/workflows/pull-request.yaml)
+[![Latest Release](https://img.shields.io/github/v/release/bytebot-chat/gateway-discord?sort=semver)](https://github.com/bytebot-chat/gateway-discord/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bytebot-chat/gateway-discord)](https://goreportcard.com/report/github.com/bytebot-chat/gateway-discord)
+[![Go version](https://img.shields.io/github/go-mod/go-version/gomods/athens.svg)](https://github.com/bytebot-chat/gateway-discord)
 [![Go Reference](https://pkg.go.dev/badge/github.com/bytebot-chat/gateway-discord.svg)](https://pkg.go.dev/github.com/bytebot-chat/gateway-discord)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)
+![License](https://img.shields.io/github/license/bytebot-chat/gateway-discord)
 
 ## Table of Contents
 - [Introduction](#introduction)
