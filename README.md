@@ -20,8 +20,15 @@
 
 ## Introduction
 
-This is the Discord gateway for the Bytebot chat ecosystem. It is meant to be a relatively simple gateway that can be used to connect to Discord and relay messages to and from the Bytebot ecosystem. By using this gateway, you can connect all of your apps to Discord without having to write a Discord bot for each one or managing multiple sets of credentials. Business logic is handled by the Bytebot ecosystem, not the gateway, so you can focus on building your app and not on the Discord API.
+_A simpler way to write Discord bots._
 
+Bytebot is a message-passing framework designed to make it easier to write bots for multiple platforms. This repository contains the Discord gateway, which allows you to connect to the Discord API present a single interface to your bot while you run as many applications and services as you like, in any language, without having to worry much about the underlying platform. This particular repository is the gateway for Discord.
+
+This tool is not a complete working bot on its own. The gateway is responsible for authenticating and managing a connection to Discord while passing messages to and from your bot. You will need to write your own bot to take advantage of this gateway. You can see an example of a bot written in Go [here](examples/pingpong/main.go).
+
+Because messages are JSON-encoded, you can write your bot in any language you like. You can even write multiple bots in different languages and run them all at the same time. You can also run multiple instances of the same bot, each with a different configuration, if you like. The only requirement is that your bot can read and write JSON-encoded messages to standard input and output.
+
+Here is an example of a python implementation of a bot that responds to the `ping` command with `pong`: [bytebot-chat/examples/py-pingpong](examples/py-pingpong/pingpong.py)
 ## Installation
 
 ### Prerequisites
