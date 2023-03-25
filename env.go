@@ -11,7 +11,15 @@ import (
 // parseEnv parses configuration environnement variables.
 func parseEnv() {
 	if !isFlagSet("redis") {
-		*redisAddr = parseStringFromEnv("BYTEBOT_REDIS", "localhost:6379")
+		// Use either BYTEBOT_REDIS or REDIS_URL, but default to localhost:6379
+		// BYTEBOT_REDIS is used by the Dockerfile and takes precedence if both are set
+		if os.Getenv("BYTEBOT_REDIS") != "" {
+			*redisAddr = os.Getenv("BYTEBOT_REDIS")
+		} else if os.Getenv("REDIS_URL") != "" {
+			*redisAddr = os.Getenv("REDIS_URL")
+		} else {
+			*redisAddr = "localhost:6379"
+		}
 	}
 
 	if !isFlagSet("id") {
