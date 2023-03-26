@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/alexliesenfeld/health"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
@@ -24,6 +27,7 @@ var (
 
 	redisAddr = flag.String("redis", "localhost:6379", "Address and port of redis host")
 	redisPass = flag.String("rpass", "", "Redis password")
+	redisUser = flag.String("ruser", "", "Redis username")
 	id        = flag.String("id", "discord", "ID to use when publishing messages")
 	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
 	outbound  = flag.String("outbound", "discord-outbound", "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
@@ -38,6 +42,9 @@ func init() {
 	// Setup command line parameters
 	flag.StringVar(&Token, "t", "", "Bot Token") // Discord bot token
 	flag.Parse()                                 // Parse the command line parameters
+
+	// Parse environment variables
+	parseEnv()
 
 	// Set the contexts before we start the program
 	redisCtx = context.Background()
@@ -93,21 +100,23 @@ func main() {
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dgo.AddHandler(messageCreate)
 
-	// Setup Redis client
-	log.Info().
-		Str("func", "main").
-		Str("redis", *redisAddr).
-		Msg("Connecting to Redis")
-	rdb = redisConnect(*redisAddr, *redisPass, 0, redisCtx) // Connect to Redis
+	// Connect to redis
+	rdb = redisConnect(*redisAddr, *redisUser, *redisPass, 0, redisCtx)
 	if rdb == nil {
 		log.Fatal().Msg("Unable to connect to Redis")
 		return
 	}
+
 	defer rdb.Close()
-	log.Info().
-		Str("func", "main").
-		Str("redis", *redisAddr).
-		Msg("Connected to Redis")
+
+	// Ping redis one more time to make sure we're connected
+	_, err = rdb.Ping(redisCtx).Result()
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Str("func", "main").
+			Msg("Error pinging Redis")
+	}
 
 	// Open a websocket connection to Discord and begin listening.
 	// Error out if we can't connect
@@ -128,6 +137,58 @@ func main() {
 
 	// Handle outbound messages in a goroutine
 	go handleOutbound(*outbound, rdb, dgo, redisCtx)
+
+	// Setup a health check endpoint
+	checker := health.NewChecker(
+		health.WithCacheDuration(1*time.Second),
+		health.WithTimeout(10*time.Second),
+		// Check the redis connection with a ping
+		health.WithPeriodicCheck(
+			15*time.Second,
+			3*time.Second,
+			health.Check{
+				Name: "redis",
+				Check: func(ctx context.Context) error {
+					_, err := rdb.Ping(ctx).Result()
+					return err
+				},
+			}),
+
+		// Test the redis pubsub connection by subscribing and unsubscribing
+		health.WithPeriodicCheck(
+			15*time.Second,
+			3*time.Second,
+			health.Check{
+				Name: "redis-pubsub",
+				Check: func(ctx context.Context) error {
+					pubsub := rdb.Subscribe(ctx, "test")
+					_, err := pubsub.Receive(ctx)
+					if err != nil {
+						return err
+					}
+					err = pubsub.Close()
+					return err
+				},
+			}),
+
+		// Test the Discord connection by sending a message to our own ID
+		health.WithPeriodicCheck(
+			15*time.Second,
+			3*time.Second,
+			health.Check{
+				Name: "discord",
+				Check: func(ctx context.Context) error {
+					_, err := dgo.ChannelMessageSend(dgo.State.User.ID, "Test")
+					return err
+				},
+			}),
+	)
+
+	// Register the health check endpoint
+	http.Handle("/health", health.NewHandler(checker))
+
+	// Start the health check server
+	go log.Fatal().Err(http.ListenAndServe(":8080", nil)).Msg("Error starting health check server")
 
 	// for loop to hold the program open until CTRL-C is pressed
 	for {
