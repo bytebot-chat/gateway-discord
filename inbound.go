@@ -52,7 +52,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Info().
 		Str("func", "messageCreate").
 		Str("id", msg.Metadata.ID.String()).
-		Msg("Published message to Redis")
+		Msgf("Published message to %s", *inbound)
 
 	log.Debug().
 		Str("func", "messageCreate").
