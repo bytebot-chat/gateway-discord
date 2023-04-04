@@ -11,12 +11,12 @@ import (
 // Because the discordgo.Session.ChannelMessageSend() method only accepts channel ID and content as a string, our struct limits iteslef to those two fields as well.
 // Future work may expand this to include more fields or expand metadata to include more information that can be used to forumlate more complex responses.
 type MessageSend struct {
-	ChannelID       string             `json:"channel_id,omitempty"`       // ChannelID is the ID of the discord channel to send the message to
-	Content         string             `json:"content,omitempty"`          // Content is the text body of the message to send
-	Metadata        Metadata           `json:"metadata,omitempty"`         // Metadata is the metadata that is used to track the message
-	PreviousMessage *discordgo.Message `json:"previous_message,omitempty"` // PreviousMessage is the message that triggered this message
-	ShouldReply     bool               `json:"should_reply,omitempty"`     // ShouldReply is a flag that indicates if the message should reply to the user that sent the previous message
-	ShouldMention   bool               `json:"should_mention,omitempty"`   // ShouldMention is a flag that indicates if the message should mention the user that sent the previous message
+	ChannelID       string             `json:"channel_id"`       // ChannelID is the ID of the discord channel to send the message to
+	Content         string             `json:"content"`          // Content is the text body of the message to send
+	Metadata        Metadata           `json:"metadata"`         // Metadata is the metadata that is used to track the message
+	PreviousMessage *discordgo.Message `json:"previous_message"` // PreviousMessage is the message that triggered this message
+	ShouldReply     bool               `json:"should_reply"`     // ShouldReply is a flag that indicates if the message should reply to the user that sent the previous message
+	ShouldMention   bool               `json:"should_mention"`   // ShouldMention is a flag that indicates if the message should mention the user that sent the previous message
 }
 
 // Deprecated in favor of newer methods that consume the entire model.Message struct
