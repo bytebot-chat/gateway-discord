@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strings"
 )
 
 // This file contains environnement variables parsing related methods,
@@ -35,6 +36,10 @@ func parseEnv() {
 	if !isFlagSet("ruser") {
 		*redisUser = parseStringFromEnv("BYTEBOT_RUSER", "")
 	}
+
+	if !isFlagSet("verbose") {
+		*verbose = parseBoolFromEnv("BYTEBOT_VERBOSE", false)
+	}
 }
 
 // Parses a string from an env variable and returns it.
@@ -44,6 +49,15 @@ func parseStringFromEnv(varName, defaultVal string) string {
 		return val
 	}
 	return defaultVal
+}
+
+// Parses a boolean from an env variable and returns it.
+func parseBoolFromEnv(varName string, defaultVal bool) bool {
+	val, set := os.LookupEnv(varName)
+	if set {
+		return strings.ToLower(val) == "true"
+	}
+	return false
 }
 
 // This is used to check if a flag was set
