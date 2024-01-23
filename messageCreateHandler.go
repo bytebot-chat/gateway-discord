@@ -48,5 +48,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	log.Debug().
 		Str("func", "messageCreate").
+		Str("message_id", m.ID).
+		Str("source_username", m.Author.Username).
+		Str("dest_topic", topic).
+		Str("message_content", m.Content).
 		Msg("Sent message to Redis")
 }
