@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
@@ -22,11 +24,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	// Topic ID is derived from the protocol, server, channel, and user and dot-delimited
-	// Example for sithmail: discord.sithmail.#channel.user
-	topic := "discord." + m.GuildID + "." + m.ChannelID + "." + m.Author.ID
+	// Example for sithmail: inbound.discord.sithmail.#channel.user
+	topic := "inbound.discord." + m.GuildID + "." + m.ChannelID + "." + m.Author.ID
+
+	// Marshal the message into a byte array
+	// This is required because Redis only accepts byte arrays
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		log.Err(err).Msg("Failed to marshal message into JSON")
+		return
+	}
 
 	// Publish the message to redis
-	res := rdb.Publish(redisCtx, topic, m)
+	res := rdb.Publish(redisCtx, topic, jsonBytes)
 	if res.Err() != nil {
 		log.Err(res.Err()).Msg("Unable to publish message")
 		return

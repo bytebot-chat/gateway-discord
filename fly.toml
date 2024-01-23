@@ -1,0 +1,31 @@
+# fly.toml app configuration file generated for bytebot-discord-gateway on 2023-12-08T05:05:12Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "bytebot-discord-gateway"
+primary_region = "atl"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Pattern is <protocol>.<server>.<env>
+  BYTEBOT_ID = "discord.sithmail.prod"
+  # Pattern is <direction>.<protocol>.<server>.<env>
+  BYTEBOT_INBOUND = "inbound.discord.sithmail.prod"
+  # Pattern is <direction>.<protocol>.<server>.<env>
+  BYTEBOT_OUTBOUND = "outbound.discord.sithmail.prod"
+  REDIS_URL = "fly-bytebot.upstash.io:6379"
+  BYTEBOT_LOG_LEVEL = "DEBUG"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
+
+[[metrics]]
+  port = 8080
+  path = "/metrics"
