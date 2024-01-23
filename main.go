@@ -29,8 +29,6 @@ var (
 	redisPass = flag.String("rpass", "", "Redis password")
 	redisUser = flag.String("ruser", "", "Redis username")
 	id        = flag.String("id", "discord", "ID to use when publishing messages")
-	inbound   = flag.String("inbound", "discord-inbound", "Pubsub queue to publish inbound messages to")
-	outbound  = flag.String("outbound", "discord-outbound", "Pubsub to subscribe to for sending outbound messages. Defaults to being equivalent to `id`")
 	verbose   = flag.Bool("verbose", false, "Enable verbose logging")
 )
 
@@ -75,8 +73,6 @@ func main() {
 	log.Info().
 		Str("func", "main").
 		Str("id", *id).
-		Str("inbound", *inbound).
-		Str("outbound", *outbound).
 		Str("redis", *redisAddr).
 		Msg("Starting Discord gateway")
 
@@ -129,14 +125,7 @@ func main() {
 	}
 	defer dgo.Close()
 
-	// Subscribe to the outbound queue
-	log.Info().
-		Str("func", "main").
-		Str("queue", *outbound).
-		Msg("Subscribing to outbound queue")
-
 	// Handle outbound messages in a goroutine
-	go handleOutbound(*outbound, rdb, dgo, redisCtx)
 
 	// Setup a health check endpoint
 	checker := health.NewChecker(

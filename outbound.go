@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/bytebot-chat/gateway-discord/model"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog/log"
 )
@@ -31,49 +30,5 @@ func handleOutbound(sub string, rdb *redis.Client, s *discordgo.Session, ctx con
 			Str("topic", sub).
 			Str("payload", msg.Payload).
 			Msg("Received message from Redis")
-
-		// Unmarshal the message into a MessageSend
-		m := &model.MessageSend{}
-		err := m.UnmarshalJSON([]byte(msg.Payload))
-
-		if err != nil {
-			log.Err(err).
-				Str("func", "handleOutbound").
-				Str("topic", sub).
-				Msg("Unable to unmarshal message")
-			continue
-		}
-
-		// Send the message to Discord
-		if m.ShouldMention {
-			m.Content = "<@" + m.PreviousMessage.Author.ID + "> " + m.Content
-		}
-
-		if m.ShouldReply {
-			log.Debug().
-				Str("func", "handleOutbound").
-				Str("id", m.Metadata.ID.String()).
-				Msg("Reply requested")
-
-			_, _ = s.ChannelMessageSendReply(m.ChannelID, m.Content, m.PreviousMessage.Reference())
-		} else {
-			_, err = s.ChannelMessageSend(m.ChannelID, m.Content) // TODO: Handle replies and mentions
-			if err != nil {
-				log.Err(err).
-					Str("func", "handleOutbound").
-					Str("id", m.Metadata.ID.String()).
-					Str("topic", sub).
-					Msg("Unable to send message to Discord")
-				continue
-			}
-		}
-
-		log.Debug().
-			Str("func", "handleOutbound").
-			Str("id", m.Metadata.ID.String()).
-			Str("source", m.Metadata.Source).
-			Str("dest", m.Metadata.Dest).
-			Str("topic", sub).
-			Msg("Sent message to Discord")
 	}
 }

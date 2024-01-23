@@ -24,14 +24,6 @@ func parseEnv() {
 		*id = parseStringFromEnv("BYTEBOT_ID", "discord")
 	}
 
-	if !isFlagSet("inbound") {
-		*inbound = parseStringFromEnv("BYTEBOT_INBOUND", "discord-inbound")
-	}
-
-	if !isFlagSet("outbound") {
-		*outbound = parseStringFromEnv("BYTEBOT_OUTBOUND", *id)
-	}
-
 	if !isFlagSet("t") {
 		Token = parseStringFromEnv("BYTEBOT_TOKEN", "")
 	}

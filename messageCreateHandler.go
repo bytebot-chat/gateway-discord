@@ -2,9 +2,7 @@ package main
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/bytebot-chat/gateway-discord/model"
 	"github.com/rs/zerolog/log"
-	uuid "github.com/satori/go.uuid"
 )
 
 // This function is called every time a new message is created from any Message
@@ -23,27 +21,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// Create a new message and populate it with the data from the Discord message
-	msg := &model.Message{
-		Message: m.Message,
-	}
-
-	// Set the metadata before sending it to Redis
-	msg.Metadata = model.Metadata{
-		Source: *id,
-		Dest:   "",
-		ID:     uuid.NewV4(),
-	}
-
-	// Marshal the message to JSON
-	json, err := msg.MarshalJSON()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to marshal message")
-		return
-	}
+	// Topic ID is derived from the protocol, server, channel, and user and dot-delimited
+	// Example for sithmail: discord.sithmail.#channel.user
+	topic := "discord." + m.GuildID + "." + m.ChannelID + "." + m.Author.ID
 
 	// Publish the message to redis
-	res := rdb.Publish(redisCtx, *inbound, json)
+	res := rdb.Publish(redisCtx, topic, m)
 	if res.Err() != nil {
 		log.Err(res.Err()).Msg("Unable to publish message")
 		return
@@ -51,16 +34,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	log.Info().
 		Str("func", "messageCreate").
-		Str("id", msg.Metadata.ID.String()).
-		Msgf("Published message to %s", *inbound)
+		Msgf("Published message to %s", topic)
 
 	log.Debug().
 		Str("func", "messageCreate").
-		Str("id", msg.Metadata.ID.String()).
-		Str("source", msg.Metadata.Source).
-		Str("dest", msg.Metadata.Dest).
-		Str("topic", *inbound).
-		Str("content", msg.Content).
-		Str("author", msg.Author.ID+":"+msg.Author.Discriminator).
 		Msg("Sent message to Redis")
 }
