@@ -126,6 +126,7 @@ func main() {
 	defer dgo.Close()
 
 	// Handle outbound messages in a goroutine
+	go handleOutbound(redisCtx, rdb, dgo)
 
 	// Setup a health check endpoint
 	checker := health.NewChecker(

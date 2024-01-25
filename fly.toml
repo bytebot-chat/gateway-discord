@@ -12,15 +12,13 @@ kill_timeout = "5s"
   dockerfile = "Dockerfile"
 
 [env]
-  # Pattern is <protocol>.<server>.<env>
-  BYTEBOT_ID = "discord.sithmail.prod"
   # Pattern is <direction>.<protocol>.<server>.<env>
-  BYTEBOT_INBOUND = "inbound.discord.sithmail.prod"
-  # Pattern is <direction>.<protocol>.<server>.<env>
-  BYTEBOT_OUTBOUND = "outbound.discord.sithmail.prod"
+  # The bot will attempt to handle all outbound messages for this given subscription pattern
+  BYTEBOT_OUTBOUND_TOPIC = "outbound.discord.sithmail.prod"
   REDIS_URL = "fly-bytebot.upstash.io:6379"
   BYTEBOT_LOG_LEVEL = "DEBUG"
-
+  BYTEBOT_VERBOSE = "true"
+  
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
